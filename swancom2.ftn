@@ -711,7 +711,9 @@
 !
       INTEGER ID, IDDUM, IENT, IK, IL, IS
       REAL    A, B, C, D, KD, KVEGH, LAYPRT, SINHK, SLAYH,
-     &        SLAYH1, SLAYH2, SVEG1, SVEG2, SVEGET
+     &        SLAYH1, SLAYH2, SVEG1, SVEG2, SVEGET, alp, Keu, Q, 
+     &        Rey, djnx
+!    Added alp, Keu, Q following Tomohiro -- DJN
 !
 !  9. Subroutines calling
 !
@@ -780,6 +782,47 @@
             D     = 3.*SINHK
             A     = C - A
             B     = D - B
+            alp   = LAYH(1)/DEP2(KCGRD(1))
+!           LAYH = "layer thickness for vegetation model"
+!           DEP2 = "depth"
+            Keu   = (SQRT(2*ETOT)*SMEBRK*COSH(KD*alp)/SINH(KD))
+     +             *(2*pi/SMEBRK)/VEGDIL(IL)
+!           Compute Reynolds number
+            Rey = (SQRT(2*ETOT)*SMEBRK*COSH(KD*alp)/SINH(KD))
+     +            *VEGDIL(IL)/1E-6
+!           Re = u_c * b / nu
+! Determine which variable CD method to use.            
+            open(unit=62,file='fort.62',status='old')
+            read(62,*) djnx
+            close(62)
+!            IVEG, KCGRD(1), DEP2(KCGRD(1)), SVEGET
+!           Keu = u_c * T_p / b_v
+!           u_c = "characteristic velocity acting on the plant and defined as the maximum 
+! horizontal velocity at the middle of the vegetation field defined using Hrms and Tp as 
+! the wave height and the wave period corresponding to a monochromatic wave train"
+!           b_v = plant area per unit height, which would equal the diameter, I guess           
+!           ETOT = "Total wave energy density"
+!           
+!           SMEBRK = "Mean frequency according to first order moment"
+!           VEGDIL = "vegetation diameter for each layer and grid point"
+            Q     = Keu/alp**0.76
+
+            if (djnx.eq.1) then
+! Suzuki et al 2012 (actually Mendez and Losada 2004)- almost identical to B&H2009 below
+                VEGDRL(1)=exp(-0.0138*Q)/(Q**0.3) 
+            else if (djnx.eq.2) then
+! Try the Bradley and Houser 2009 value - does not do a great job - not enough dissip.
+                VEGDRL(1)=126.45*Keu**-2.7
+            else if (djnx.eq.3) then
+! Try the Sanchez-Gonzalez 2011 formulation - this one does a pretty good job.
+                VEGDRL(1) = 22.9 / (Keu**1.09) 
+            else if (djnx.eq.4) then 
+! Try the Houser et al 2014 combined formulation--this one has way too much drag.
+                VEGDRL(1) = 0.01 + (700/Rey)**2
+            endif            
+            ! output debugging variables to fort.60
+            write(60,*) VEGDRL(1), KCGRD(1)
+            write(61,*) Keu, Rey
             SVEG2 = SVEG2 + VEGDRL(IL)*VEGDIL(IL)*VEGNSL(IL)*(A + B)
          END DO
 
