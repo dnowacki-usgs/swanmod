@@ -55,7 +55,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -106,7 +106,7 @@
 !
       INTEGER SWPDIR
       REAL    XCGRID(MXC,MYC), YCGRID(MXC,MYC),
-     &        RDX(10)        , RDY(10)
+     &        RDX(MICMAX)    , RDY(MICMAX)
 !
 !  6. Local variables
 !
@@ -261,7 +261,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -512,7 +512,7 @@
       REAL  ::  DEP2(MCGRD)         ,
      &          UX2(MCGRD)          ,
      &          UY2(MCGRD)          ,
-     &          RDX(10), RDY(10)                                          40.08
+     &          RDX(MICMAX), RDY(MICMAX)                                  40.08
 !
       LOGICAL   ANYBIN(MDC,MSC)     ,
      &          LOWEST, LOWBIN, HGHBIN
@@ -865,6 +865,8 @@
       USE OCPCOMM4                                                        40.41
       USE M_DIFFR                                                         40.21
 !
+      IMPLICIT NONE
+!
 !
 !   --|-----------------------------------------------------------|--
 !     | Delft University of Technology                            |
@@ -877,7 +879,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -1043,7 +1045,7 @@
 !
 !************************************************************************
 !
-      INTEGER  IC    ,IS    ,ID    ,SWPDIR
+      INTEGER  IENT, IP, IC    ,IS    ,ID    ,SWPDIR
 !
       REAL     CAX(MDC,MSC,ICMAX)          ,
      &         CAY(MDC,MSC,ICMAX)          ,
@@ -1164,7 +1166,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -1303,8 +1305,8 @@
       REAL  :: KWAVE(MSC,MICMAX)                                          40.22
       REAL  :: UX2(MCGRD)                  ,
      &         UY2(MCGRD)                  ,
-     &         RDX(10)                     ,                              40.08
-     &         RDY(10)                                                    40.08
+     &         RDX(MICMAX)                 ,                              40.08
+     &         RDY(MICMAX)                                                40.08
 !
 !        logical:
 !
@@ -1317,7 +1319,7 @@
 !
 !        ICUR    Indicator for current
 !        ICMAX   Maximum array size for the points of the molecule
-!        NSTATC  Indicator if computation is stationair
+!        NSTATC  Indicator if computation is stationary or not
 !        MXC     Maximum counter of gridppoints in x-direction
 !        MYC     Maximum counter of gridppoints in y-direction
 !        MSC     Maximum counter of relative frequency
@@ -1993,7 +1995,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -2128,13 +2130,13 @@
       REAL  :: KWAVE(MSC,MICMAX)                                          40.22
       REAL  :: UX2(MCGRD)                  ,
      &         UY2(MCGRD)                  ,
-     &         RDX(10)                     ,                              40.08
-     &         RDY(10)                                                    40.08
+     &         RDX(MICMAX)                 ,                              40.08
+     &         RDY(MICMAX)                                                40.08
 !
 !     variables from common
 !
 !        ICUR    Indicator for current
-!        NSTATC  Indicator if computation is stationair
+!        NSTATC  Indicator if computation is stationary or not
 !        MXC     Maximum counter of gridppoints in x-direction
 !        MYC     Maximum counter of gridppoints in y-direction
 !        MSC     Maximum counter of relative frequency
@@ -2317,34 +2319,34 @@
 !                      2DY USING P4-P3
 
 !     *** @D/@X ***
-!      DHDX = 1.0*RDX(1) * (DLOC1-DLOC2) + 1.0*RDX(2) * (DLOC1-DLOC3) ! upwind scheme
-      DHDX = 0.5*RDX(1) * (DLOC5-DLOC2) + 0.5*RDX(2) * (DLOC4-DLOC3) ! centered scheme       40.59
+      DHDX = 1.0*RDX(1) * (DLOC1-DLOC2) + 1.0*RDX(2) * (DLOC1-DLOC3) ! upwind scheme
+!      DHDX = 0.5*RDX(1) * (DLOC5-DLOC2) + 0.5*RDX(2) * (DLOC4-DLOC3) ! centered scheme       40.59
 !     *** @D/@Y ***
-!      DHDY = 1.0*RDY(1) * (DLOC1-DLOC2) + 1.0*RDY(2) * (DLOC1-DLOC3) ! upwind scheme
-      DHDY = 0.5*RDY(1) * (DLOC5-DLOC2) + 0.5*RDY(2) * (DLOC4-DLOC3) ! centered scheme       40.59
+      DHDY = 1.0*RDY(1) * (DLOC1-DLOC2) + 1.0*RDY(2) * (DLOC1-DLOC3) ! upwind scheme
+!      DHDY = 0.5*RDY(1) * (DLOC5-DLOC2) + 0.5*RDY(2) * (DLOC4-DLOC3) ! centered scheme       40.59
 
       IF ( ICUR .EQ. 1 ) THEN  !           *** current is on ***
 !
 !     *** @Ux/@X ***
-!         DUXDX = 1.0*RDX(1) * (UXLOC1 - UXLOC2) +
-!     &           1.0*RDX(2) * (UXLOC1 - UXLOC3)
-         DUXDX = 0.5*RDX(1) * (UXLOC5 - UXLOC2) +
-     &           0.5*RDX(2) * (UXLOC4 - UXLOC3)                            40.59
+         DUXDX = 1.0*RDX(1) * (UXLOC1 - UXLOC2) +
+     &           1.0*RDX(2) * (UXLOC1 - UXLOC3)
+!         DUXDX = 0.5*RDX(1) * (UXLOC5 - UXLOC2) +
+!     &           0.5*RDX(2) * (UXLOC4 - UXLOC3)                            40.59
 !     *** @Ux/@Y ***
-!         DUXDY = 1.0*RDY(1) * (UXLOC1 - UXLOC2) +
-!     &           1.0*RDY(2) * (UXLOC1 - UXLOC3)
-         DUXDY = 0.5*RDY(1) * (UXLOC5 - UXLOC2) +
-     &           0.5*RDY(2) * (UXLOC4 - UXLOC3)                            40.59
+         DUXDY = 1.0*RDY(1) * (UXLOC1 - UXLOC2) +
+     &           1.0*RDY(2) * (UXLOC1 - UXLOC3)
+!         DUXDY = 0.5*RDY(1) * (UXLOC5 - UXLOC2) +
+!     &           0.5*RDY(2) * (UXLOC4 - UXLOC3)                            40.59
 !     *** @Uy/@X ***
-!         DUYDX = 1.0*RDX(1) * (UYLOC1 - UYLOC2) +
-!     &           1.0*RDX(2) * (UYLOC1 - UYLOC3)
-         DUYDX = 0.5*RDX(1) * (UYLOC5 - UYLOC2) +
-     &           0.5*RDX(2) * (UYLOC4 - UYLOC3)                            40.59
+         DUYDX = 1.0*RDX(1) * (UYLOC1 - UYLOC2) +
+     &           1.0*RDX(2) * (UYLOC1 - UYLOC3)
+!         DUYDX = 0.5*RDX(1) * (UYLOC5 - UYLOC2) +
+!     &           0.5*RDX(2) * (UYLOC4 - UYLOC3)                            40.59
 !     *** @Uy/@Y ***
-!         DUYDY = 1.0*RDY(1) * (UYLOC1 - UYLOC2) +
-!     &           1.0*RDY(2) * (UYLOC1 - UYLOC3)
-         DUYDY = 0.5*RDY(1) * (UYLOC5 - UYLOC2) +
-     &           0.5*RDY(2) * (UYLOC4 - UYLOC3)                            40.59
+         DUYDY = 1.0*RDY(1) * (UYLOC1 - UYLOC2) +
+     &           1.0*RDY(2) * (UYLOC1 - UYLOC3)
+!         DUYDY = 0.5*RDY(1) * (UYLOC5 - UYLOC2) +
+!     &           0.5*RDY(2) * (UYLOC4 - UYLOC3)                            40.59
 
        CAST3 = UXLOC1 * DHDX
        CAST4 = UYLOC1 * DHDY
@@ -2399,9 +2401,13 @@
         CLOC4=SPCSIG(IS)/KLOC4
         CLOC5=SPCSIG(IS)/KLOC5
 
+!       upwind scheme
+        DCDX = 1.0*RDX(1) * (CLOC1-CLOC2) + 1.0*RDX(2) * (CLOC1-CLOC3)    40.59
+        DCDY = 1.0*RDY(1) * (CLOC1-CLOC2) + 1.0*RDY(2) * (CLOC1-CLOC3)    40.59
+
 !       centered scheme
-        DCDX = 0.5*RDX(1) * (CLOC5-CLOC2) + 0.5*RDX(2) * (CLOC4-CLOC3)    40.59
-        DCDY = 0.5*RDY(1) * (CLOC5-CLOC2) + 0.5*RDY(2) * (CLOC4-CLOC3)    40.59
+!        DCDX = 0.5*RDX(1) * (CLOC5-CLOC2) + 0.5*RDX(2) * (CLOC4-CLOC3)    40.59
+!        DCDY = 0.5*RDY(1) * (CLOC5-CLOC2) + 0.5*RDY(2) * (CLOC4-CLOC3)    40.59
 
 !       *** coefficients for CAS -> function of IS only ***
 
@@ -2607,7 +2613,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -2769,7 +2775,6 @@
       USE OCPCOMM4                                                        40.41
 !
 !
-!
 !   --|-----------------------------------------------------------|--
 !     | Delft University of Technology                            |
 !     | Faculty of Civil Engineering                              |
@@ -2781,7 +2786,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -2923,7 +2928,7 @@
 !     Changed ICMAX to MICMAX, since MICMAX doesn't vary over gridpoint   40.22
       REAL  :: CAX(MDC,MSC,MICMAX) ,CAY(MDC,MSC,MICMAX)                   40.22
       REAL  :: IMATRA(MDC,MSC)    ,IMATDA(MDC,MSC)            ,
-     &         RDX(10)            ,RDY(10)                    ,           40.08
+     &         RDX(MICMAX)        ,RDY(MICMAX)                ,           40.08
      &         TRSCF(3)            ,                                      33.09
      &         OBREDF(MDC,MSC,2)                                         040697
       REAL  :: TRAC0(MDC,MSC,MTRNP)                                       40.85
@@ -2932,6 +2937,7 @@
       INTEGER  IDCMIN(MSC)                ,
      &         IDCMAX(MSC)                                                33.09
 !
+      INTEGER IENT
       SAVE IENT
       DATA IENT/0/
       IF (LTRACE) CALL STRACE (IENT,'STRSXY')
@@ -3001,7 +3007,7 @@
 !         *** the term FXY2 is known, store in IMATRA ***
 !         *** the term FXY1 is unknown, store in IMATDA ***
 !
-!         This business of doing rollback regardless of ITERMX is an artifact  40.08
+!         This business of doing rollback regardless of ITERMX was an artifact 40.08
 !         and has been removed. Thus, the code reverts to its form in v40.01   40.08
 !
           IF (NSTATC.EQ.1) THEN                                            40.00
@@ -3088,7 +3094,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -3234,7 +3240,7 @@
 !     Changed ICMAX to MICMAX, since MICMAX doesn't vary over gridpoint   40.22
       REAL  :: CAX(MDC,MSC,MICMAX) ,CAY(MDC,MSC,MICMAX)                   40.22
       REAL  :: IMATRA(MDC,MSC)    ,IMATDA(MDC,MSC)            ,
-     &         RDX(10)            ,RDY(10)                    ,           40.08
+     &         RDX(MICMAX)        ,RDY(MICMAX)                ,           40.08
      &         XMU(5)             ,YMU(5)                                 40.08 33.10
       REAL  :: TRAC0(MDC,MSC,MTRNP)                                       40.85
       REAL  :: TRAC1(MDC,MSC,MTRNP)                                       40.85
@@ -3416,7 +3422,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -3597,7 +3603,7 @@
       REAL  :: CGO(MSC,MICMAX)                                            33.08 40.22
       REAL  :: CAX(MDC,MSC,MICMAX) ,CAY(MDC,MSC,MICMAX)                   40.22
       REAL  :: IMATRA(MDC,MSC)    ,IMATDA(MDC,MSC)
-      REAL  :: RDX(10)            ,RDY(10)                                40.08
+      REAL  :: RDX(MICMAX)        ,RDY(MICMAX)                            40.08
 !     Changed ICMAX to MICMAX, since MICMAX doesn't vary over gridpoint   40.22
       REAL  :: CAX1(MDC,MSC,MICMAX),CAY1(MDC,MSC,MICMAX)                  33.08 40.22
       REAL  :: DCG, SPCDIR(MDC,6), DXX, DYY, DXY                          33.08
@@ -3870,7 +3876,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4005,7 +4011,7 @@
 !
 !****************************************************************
 !
-      INTEGER  IS      ,ID      ,IDDLOW  ,IDDTOP  ,IDDUM
+      INTEGER  IENT, IS      ,ID      ,IDDLOW  ,IDDTOP  ,IDDUM
 !
       REAL     DS      ,PNH     ,PN1     ,PN2     ,C1      ,C2      ,
      &         C3      ,A1      ,A3      ,PCD1    ,PCD2    ,RHS12   ,
@@ -4176,6 +4182,8 @@
       USE SWCOMM4                                                         40.41
       USE OCPCOMM4                                                        40.41
 !
+      IMPLICIT NONE
+!
 !
 !   --|-----------------------------------------------------------|--
 !     | Delft University of Technology                            |
@@ -4188,7 +4196,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4388,7 +4396,7 @@
 !
 !************************************************************************
 !
-      INTEGER  IS      ,ID      ,ISSTOP  ,
+      INTEGER  IENT, IS      ,ID      ,ISSTOP  ,
      &         IDDLOW  ,IDDTOP  ,IDDUM
 !
       REAL     FSA     ,FLEFT   ,FRGHT   ,DS      ,CFLMAX  ,CFLCEN  ,
@@ -4400,8 +4408,8 @@
      &         CAY(MDC,MSC,ICMAX)       ,
      &         AC2(MDC,MSC,MCGRD)       ,
      &         IMATRA(MDC,MSC)          ,
-     &         RDX(10)                  ,                                 40.08
-     &         RDY(10)                                                    40.08
+     &         RDX(MICMAX)              ,                                 40.08
+     &         RDY(MICMAX)                                                40.08
       REAL  :: TRAC0(MDC,MSC,MTRNP)                                       41.07
 !
       INTEGER  IDCMIN(MSC)              ,
@@ -4580,7 +4588,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4705,7 +4713,7 @@
 !
       LOGICAL  BIN1, BIN2, BIN3
 !
-      INTEGER  IS    ,ID    ,IIDM  ,IIDP  ,
+      INTEGER  IENT  ,IS    ,ID    ,IIDM  ,IIDP  ,
      &         ISSTOP,IDDUM
 !
       REAL     DD    ,PNH   ,PN1   ,PN2
@@ -4843,13 +4851,17 @@
       SUBROUTINE SPREDT (SWPDIR     ,AC2        ,CAX       ,
      &                   CAY        ,IDCMIN     ,IDCMAX    ,
      &                   ISSTOP     ,ANYBIN     ,
+     &                   XCGRID     ,YCGRID     ,                         41.53
      &                   RDX        ,RDY        ,OBREDF    )              40.00
 !
 !****************************************************************
 !
+      USE SWCOMM2                                                         41.53
       USE SWCOMM3                                                         40.41
       USE SWCOMM4                                                         40.41
       USE OCPCOMM4                                                        40.41
+!
+      IMPLICIT NONE
 !
 !
 !   --|-----------------------------------------------------------|--
@@ -4863,7 +4875,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4882,10 +4894,11 @@
 !
 !
 !     0. Authors
-
+!
 !     40.00, 40.13: Nico Booij
 !     40.41: Marcel Zijlema
-
+!     41.53: Marcel Zijlema
+!
 !     1. UPDATE
 !
 !        40.00, Aug 98: introduction of obstacle reduction factor to
@@ -4894,6 +4907,7 @@
 !        40.13, Aug 01: modification of action densities is skipped
 !                       in case of Mode Noupdate
 !        40.41, Oct 04: common blocks replaced by modules, include files removed
+!        41.53, Oct 14: correction curvilinear grid
 !
 !     2. PURPOSE
 !
@@ -4977,6 +4991,8 @@
 !       IDCMIN 1D    frequency dependent counters in case of a current
 !       IDCMAX 1D    frequency dependent counters in case of a current
 !       ANYBIN 2D    Determines if a bin fall within a sweep
+!       XCGRID       coordinates of computational grid in x-direction
+!       YCGRID       coordinates of computational grid in y-direction
 !
 !     5. SUBROUTINES CALLING
 !
@@ -5013,26 +5029,97 @@
       INTEGER  IS    ,ID    ,
      &         SWPDIR,IDDUM ,ISSTOP                                       40.00
 !
-      REAL     FAC_A ,FAC_B
+      REAL     FAC_A ,FAC_B, WEIG1, WEIG2, TCF1, TCF2, CDEN, CNUM
 !
       REAL  :: AC2(MDC,MSC,MCGRD)                                         30.21
 !     Changed ICMAX to MICMAX, since MICMAX doesn't vary over gridpoint   40.22
       REAL  :: CAX(MDC,MSC,MICMAX)                                        40.22
       REAL  :: CAY(MDC,MSC,MICMAX)                                        40.22
-      REAL  :: RDX(10),  RDY(10)        ,                                 40.08 30.21
+      REAL  :: RDX(MICMAX),  RDY(MICMAX),                                 40.08 30.21
      &         OBREDF(MDC,MSC,2)                                          40.00
+      REAL  :: XCGRID(MXC,MYC), YCGRID(MXC,MYC)                           41.53
 !
       INTEGER  IDCMIN(MSC)              ,
      &         IDCMAX(MSC)
 !
       LOGICAL  ANYBIN(MDC,MSC)
 !
+      INTEGER  IDIR, IDCUM, IDMIN, IDMAX, NCURID, NID(4)                  41.53
+      REAL     IDX, IDY, CLAT                                             41.53
+!
+      INTEGER IENT
       SAVE IENT
       DATA IENT/0/
       IF (LTRACE) CALL STRACE (IENT,'SPREDT')
 !
-        DO 200 IS = 1, ISSTOP
-          DO 190 IDDUM = IDCMIN(IS), IDCMAX(IS)
+      IF ( OPTG.EQ.3 .AND. CCURV ) THEN
+!
+!        --- curvilinear grid                                             41.53
+!            consider the equation on a rectangular grid                  41.53
+!            so that all bins will be filled                              41.53
+!
+        IDX=1./(XCGRID(IXCGRD(1),IYCGRD(1))-XCGRID(IXCGRD(2),IYCGRD(2)))
+        IDY=1./(YCGRID(IXCGRD(1),IYCGRD(1))-YCGRID(IXCGRD(3),IYCGRD(3)))
+!
+        IF ( KSPHER.GT.0 ) THEN
+           CLAT = COS(DEGRAD*(YCGRID(IXCGRD(1),IYCGRD(1))+YOFFS))
+           IDX  = IDX / (CLAT * LENDEG)
+           IDY  = IDY / LENDEG
+        ENDIF
+!
+        IDCUM = 0
+        DO IDIR = 1, 4
+           NID(IDIR) = (MDC*IDIR)/4 - IDCUM
+           IDCUM     = (MDC*IDIR)/4
+        ENDDO
+        !
+        ! determine loop bounds in spectral space for current sweep
+        !
+        IDMIN = MDC+1
+        IDMAX = 0
+        !
+        IDIR   = 1
+        NCURID = 0
+        !
+        DO ID = 1, MDC
+           !
+           IF ( IDIR.EQ.SWPDIR ) THEN
+              IDMIN = MIN(ID,IDMIN)
+              IDMAX = MAX(ID,IDMAX)
+           ENDIF
+           NCURID = NCURID + 1
+           !
+           IF ( NCURID.GE.NID(IDIR) ) THEN
+              IDIR   = IDIR + 1
+              NCURID = 0
+           ENDIF
+           !
+        ENDDO
+!
+        DO IS = 1, MSC
+          DO ID = IDMIN, IDMAX
+!
+             IF ( NUMOBS.GT.0 ) THEN
+                TCF1 = OBREDF(ID,IS,1)
+                TCF2 = OBREDF(ID,IS,2)
+             ELSE
+                TCF1 = 1.
+                TCF2 = 1.
+             ENDIF
+!
+             CDEN = IDX * CAX(ID,IS,1) + IDY * CAY(ID,IS,1)
+!
+             CNUM = IDX * CAX(ID,IS,2) * TCF1 * AC2(ID,IS,KCGRD(2)) +
+     &              IDY * CAY(ID,IS,3) * TCF2 * AC2(ID,IS,KCGRD(3))
+!
+             IF (ACUPDA) AC2(ID,IS,KCGRD(1)) = CNUM / CDEN
+!
+          ENDDO
+        ENDDO
+!
+      ELSE
+        DO IS = 1, ISSTOP
+          DO IDDUM = IDCMIN(IS), IDCMAX(IS)
             ID = MOD ( IDDUM - 1 + MDC , MDC ) + 1
             IF ( ANYBIN(ID,IS) ) THEN
 !
@@ -5058,14 +5145,15 @@
      &           AC2(ID,IS,KCGRD(1)) = MAX ( 0. , (FAC_A + FAC_B))        30.21
 !
             END IF
- 190      CONTINUE
- 200    CONTINUE
+          END DO
+        END DO
+      END IF
 !
       IF ( ITEST .GE. 140 .AND. TESTFL ) THEN
         WRITE(PRINTF,6019) KCGRD(1), SWPDIR
  6019   FORMAT(' PREDT : POINT INDX  SWPDIR         :',2I5)
-        DO 610 IS = 1, ISSTOP
-          DO 600 IDDUM = IDCMIN(IS)-1, IDCMAX(IS)+1
+        DO IS = 1, ISSTOP
+          DO IDDUM = IDCMIN(IS)-1, IDCMAX(IS)+1
             ID = MOD ( IDDUM - 1 + MDC , MDC ) + 1
             WRITE (PRINTF,6020) IS, ID, AC2(ID,IS,KCGRD(1)),
      &                          AC2(ID,IS,KCGRD(2)),
@@ -5073,8 +5161,8 @@
      &                          ANYBIN(ID,IS)
  6020       FORMAT ('       : IS ID AC2 AC2(2) AC2(3) ANYBIN   :',
      &              2I5,3(E12.4),L4)
- 600      CONTINUE
- 610    CONTINUE
+          END DO
+        END DO
       END IF
 !
 !     End of the subroutine SPREDT
@@ -5104,7 +5192,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -5320,6 +5408,8 @@
 !
       USE SWCOMM3                                                         40.41
 !
+      IMPLICIT NONE
+!
 !
 !   --|-----------------------------------------------------------|--
 !     | Delft University of Technology                            |
@@ -5332,7 +5422,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -5455,6 +5545,10 @@
      &        IMAT5L(MDC,MSC)           ,                                 40.85
      &        IMAT6U(MDC,MSC)                                             40.85
 !
+      REAL  ARADSTR, DSDD, SDSDD, S1, ACT1, S2
+      REAL  ACT2, S3, ACT3, ACT4, ACT5, ACONTR
+      INTEGER ISC, IDC, IDM, IDP
+!
       LOGICAL  ANYBIN(MDC,MSC)
       INTEGER, SAVE :: IENT=0
       CALL STRACE (IENT, 'ADDDIS')
@@ -5571,7 +5665,12 @@
       TSXSPS(KCGRD(1)) = TSXSPS(KCGRD(1)) + ATRANSP(3)     ! sigma-propagation    40.85
       TRANXY(KCGRD(1)) = TRANXY(KCGRD(1)) + SUM(ATRANSP)   ! total propagation    40.85
 !
-      RADSXY(KCGRD(1)) = RADSXY(KCGRD(1)) + ARADSTR        ! radiation stress     40.85
+!       energy transfer between waves and currents due to radiation stress, see page 439 of
+!       the ICCE paper of Holthuijsen, L.H., Zijlema, M. and Van der Ham, P.J. (2009)
+!       Wave physics in a tidal inlet, in: J.M. Smith (Ed.), Proc. 31st Int. Conf. on Coast. Engng.
+!       ASCE, World Scientific Publishing, Singapore, 437-448
+!
+      RADSXY(KCGRD(1)) = RADSXY(KCGRD(1)) + ARADSTR                       40.85
 !
       IMATLA = 0.
       IMATUA = 0.
@@ -5608,7 +5707,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -5918,7 +6017,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as

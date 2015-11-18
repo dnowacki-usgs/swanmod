@@ -11,7 +11,7 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -801,8 +801,8 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
                         goto 20
                      endif
  10                  if ( lpredt ) then
-                        call SPREDT (swpdir, ac2   , cax, cay, idcmin, idcmax, &
-                                     isstop, anybin, rdx, rdy, obredf)
+                        call SPREDT (swpdir, ac2   , cax  , cay  , idcmin, idcmax,        &
+                                     isstop, anybin, dummy, dummy, rdx   , rdy   , obredf)
                         lpredt = .false.
                      endif
                      !
@@ -925,7 +925,8 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
                                       disc1               , genc0               , genc1               , redc0               , &
                                       redc1               , xis                 , compda(1,JFRC2)     , it                  , &
                                       compda(1,JNPLA2)    , compda(1,JTURB2)    , compda(1,JMUDL2)    ,                       &
-                                      compda(1,JURSEL)    , anybin              , reflso              )
+                                      compda(1,JURSEL)    , anybin              , reflso                                      &
+                                                                                                                            )
 !TIMG                        call SWTSTO(117)
                         !
                      endif
@@ -1361,7 +1362,7 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
  103 format (' ITER  ',i4,'    GRWMX ',e12.4,'    ALFA   ',e12.4)
  104 format (' IWIND ',i4,'    IWCAP ',i4   ,'            IQUAD  ',i4)
  105 format (' ISURF ',i4,'    IBOT  ',i4   ,'            ITRIAD ',i4)
- 106 format (' IVEG  ',i4,'    ITURBV',i4,'    IMUD  ',i4,/)
+ 106 format (' IVEG  ',i4,'    ITURBV',i4   ,'            IMUD   ',i4,/)
  107 format (' Test points :',2i5)
  108 format (' Number of active points = ',i6,' (fillings-degree: ',f6.2,' %)')
  110 format ('+time ', a18, ', step ',i6, '; iteration ',i4, '; sweep ',i3)

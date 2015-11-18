@@ -64,6 +64,8 @@
       USE m_xnldata                                                       40.41
       USE m_fileio                                                        40.41
 !
+      IMPLICIT NONE
+!
 !
 !   --|-----------------------------------------------------------|--
 !     | Delft University of Technology                            |
@@ -76,7 +78,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -550,8 +552,10 @@
 !     MSGERR : Handles error messages according to severity               40.41
 !     NUMSTR : Converts integer/real to string                            40.41
 !     TXPBLA : Removes leading and trailing blanks in string              40.41
+!MPI!     STPNOW : Logical indicating whether program must
+!MPI!              terminated or not
 !
-      LOGICAL STPNOW                                                      34.01
+!MPI      LOGICAL STPNOW                                                      34.01
 !
 !  9. Subroutines calling
 !
@@ -855,6 +859,9 @@
 !     Add variables for OMP thread parameters.                            40.31
 !$    INTEGER, EXTERNAL :: OMP_GET_NUM_THREADS, OMP_GET_THREAD_NUM        40.31
       INTEGER I1GRD,I2GRD,I1MYC,I2MYC                                     40.31
+!
+      INTEGER IENT, MSTPDA, KWIND, KWCAP, KQUAD, IYSTEP, J, IJ, IK, ID
+      REAL ALFAT, GRWOLD
 !
 !-----------------------------------------------------------------------
 !                      End of variable definition
@@ -2084,6 +2091,8 @@
       USE SWCOMM4                                                         40.41
       USE M_PARALL                                                        40.31
 !
+      IMPLICIT NONE
+!
 !
 !   --|-----------------------------------------------------------|--
 !     | Delft University of Technology                            |
@@ -2096,7 +2105,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -2291,8 +2300,6 @@
 !     SPROSD
 !     SWPSEL
 !
-      LOGICAL STPNOW                                                      34.01
-!
 !  9. Subroutines calling
 !
 !     SWCOMP
@@ -2480,18 +2487,21 @@
      &         DA2M(MSC4MI:MSC4MA , MDC4MI:MDC4MA )  ,
      &         SFNL(MSC4MI:MSC4MA , MDC4MI:MDC4MA )  ,
      &         DSNL(MSC4MI:MSC4MA , MDC4MI:MDC4MA )  ,
-     &         MEMNL4(MDC,MSC,MCGRD)               ,                      30.21
+     &         MEMNL4(MDC,MSC,MCGRD)                 ,                    30.21
      &         SWTSDA(MDC,MSC,NPTSTA,MTSVAR)         ,                    40.00
      &         WWAWG(*)                              ,
      &         WWSWG(*)                              ,
-     &         RDX(10)       ,RDY(10)               ,                     15/MAY 40.08
-     &         OBREDF(MDC,MSC,2)                    ,                     040697
+     &         RDX(MICMAX)   ,RDY(MICMAX)            ,                    15/MAY 40.08
+     &         OBREDF(MDC,MSC,2)                     ,                    040697
      &         REFLSO(MDC,MSC)                                            40.41
 !
       LOGICAL  GROWW(MDC,MSC)    ,
      &         ANYWND(MDC)
 !
       INTEGER :: ISLMIN(MCGRD), NFLIM(MCGRD), NRSCAL(MCGRD)               40.23
+!
+      INTEGER IENT, NLINK, ILINK, II, INDEX, ID, IDC, ISC,
+     &        ID_MIN, ID_MAX, IDDUM
 !
       SAVE IENT
       DATA IENT/0/
@@ -2906,6 +2916,7 @@
           CALL SPREDT (SWPDIR           ,AC2               ,CAX       ,
      &                 CAY              ,IDCMIN            ,IDCMAX    ,
      &                 ISSTOP           ,LSWMAT(1,1,JABIN) ,              40.02
+     &                 XCGRID           ,YCGRID            ,              41.53
      &                 RDX              ,RDY               ,OBREDF    )   40.00
            LPREDT=.FALSE.
         END IF
@@ -3242,7 +3253,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -3475,11 +3486,16 @@
       ENDIF                                                               40.59
 !
       IF (IWCAP.EQ.1) THEN
-         WRITE(PRINTF,6005) PWCAP(1),PWCAP(2)
-         WRITE(PRINTF,6006) PWCAP(10)
- 6005    FORMAT(' W-cap Komen (`84)    : EMPCOF ',E12.4,
-     &          ' APM   ',E12.4)
- 6006    FORMAT('                      : DELTA  ',E12.4)                  41.41
+         WRITE(PRINTF,'(2A,E12.4)')' W-cap Komen (`84)    : ',
+     &                             'EMPCOF (CDS2): ',PWCAP(1)
+         WRITE(PRINTF,'(2A,E12.4)')' W-cap Komen (`84)    : ',
+     &                             'APM (STPM)   : ',PWCAP(2)
+         WRITE(PRINTF,'(2A,E12.4)')' W-cap Komen (`84)    : ',
+     &                             'POWST        : ',PWCAP(9)
+         WRITE(PRINTF,'(2A,E12.4)')' W-cap Komen (`84)    : ',
+     &                             'DELTA        : ',PWCAP(10)
+         WRITE(PRINTF,'(2A,E12.4)')' W-cap Komen (`84)    : ',
+     &                             'POWK         : ',PWCAP(11)
       ELSEIF (IWCAP.EQ.2) THEN
          WRITE(PRINTF,6335) PWCAP(3),PWCAP(4)
  6335    FORMAT(' W-cap Janssen (`90)  : CFJANS ',E12.4,
@@ -3505,6 +3521,10 @@
       ELSE
          WRITE (PRINTF, *) 'Whitecapping is off'
       ENDIF
+!
+      IF (IWIND.EQ.3) THEN                                                40.88
+         WRITE (PRINTF, *) 'Snyder/Komen wind input'                      40.88
+      ENDIF                                                               40.88
 !
       IF (ISURF.EQ.1) THEN
          WRITE(PRINTF,7012) PSURF(1),PSURF(2)
@@ -3615,6 +3635,8 @@
       USE SWCOMM4                                                         40.41
       USE M_PARALL                                                        40.31
 !
+      IMPLICIT NONE
+!
 !   --|-----------------------------------------------------------|--
 !     | Delft University of Technology                            |
 !     | Faculty of Civil Engineering                              |
@@ -3627,7 +3649,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -3741,8 +3763,10 @@
 !
       LOGICAL LHEAD, TSTFL                                                40.41
 !
-!  7. Common blocks used
+      INTEGER IENT, II
+      REAL  ACS2, ACS3
 !
+!  7. Common blocks used
 !
 !     Place local summed variables in common block so they will           40.31
 !     be scoped as shared                                                 40.31
@@ -3756,7 +3780,8 @@
 !                      terminated or not
 !     SWREDUCE         Performs a global reduction
 !
-      LOGICAL EQREAL, STPNOW
+      LOGICAL EQREAL
+!MPI      LOGICAL STPNOW
 !
 !  9. Subroutines calling
 !
@@ -4091,7 +4116,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4204,6 +4229,8 @@
      &         HSACC2(MCGRD)        ,                                     30.21
      &         SACC2(MCGRD)                                               30.21
 !
+      INTEGER IENT
+!
       SAVE IENT
       DATA IENT/0/
       IF (LTRACE) CALL STRACE (IENT,'INSAC')
@@ -4311,7 +4338,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4512,13 +4539,15 @@
      &         IMATUA(MDC,MSC)     ,IMATRA(MDC,MSC)     ,
      &         IMAT5L(MDC,MSC)     ,IMAT6U(MDC,MSC)     ,
      &         LEAKC1(MDC,MSC)
-      REAL  :: RDX(10)             ,RDY(10)             ,                 33.09 40.08
+      REAL  :: RDX(MICMAX)         ,RDY(MICMAX)         ,                 33.09 40.08
      &         OBREDF(MDC,MSC,2)   ,
      &         SPCDIR(MDC,6)                                              33.08
       REAL  :: TRAC0 (1:MDC,1:MSC,1:MTRNP)                                40.85
       REAL  :: TRAC1 (1:MDC,1:MSC,1:MTRNP)                                40.85
 !
       LOGICAL  ANYBLK(MDC,MSC)     ,ANYBIN(MDC,MSC)
+!
+      INTEGER IENT
 !
       SAVE IENT
       DATA IENT/0/
@@ -4681,7 +4710,8 @@
      &                   ABRBOT  ,UBOT    ,HS      ,QB      ,             40.02
      &                   HM      ,KMESPC  ,SMEBRK  ,KTETA   ,             41.47 40.02
      &                   TMBOT   ,BOTLV   ,GAMBR   ,RESPL   ,             41.38 40.51 40.16
-     &                   SWPDIR  ,IDDLOW  ,IDDTOP  )                      41.38
+     &                   SWPDIR  ,                                        41.38
+     &                   IDDLOW  ,IDDTOP  )                               41.38
 !
 !****************************************************************
 !
@@ -4706,7 +4736,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4844,7 +4874,7 @@
       REAL, INTENT(INOUT)  :: GAMBR(MCGRD), RESPL(MCGRD)                  41.38
 !     Changed ICMAX to MICMAX, since MICMAX doesn't vary over gridpoint   40.22
       REAL, INTENT(IN)     :: KWAVE(MSC,MICMAX)                           40.22
-      REAL, INTENT(IN)     :: RDX(10), RDY(10)                            40.08
+      REAL, INTENT(IN)     :: RDX(MICMAX), RDY(MICMAX)                    40.08
       REAL, INTENT(IN)     :: SPCDIR(MDC,6)
 !
       REAL, INTENT(IN OUT) :: AC2(MDC,MSC,MCGRD)
@@ -5033,7 +5063,7 @@
 !
         IF ( UB2 .GT. 0.) UBOT(KCGRD(1)) = SQRT ( UB2 )
         IF ( AB2 .GT. 0.) ABRBOT = SQRT (2. *  AB2)
-        IF ( UB2.GT.0. .AND. AB2.GT.0. )                                  40.51
+        IF ( UB2 .GT. 0. .AND. AB2 .GT. 0. )                              40.51
      &                               TMBOT(KCGRD(1)) = PI2*SQRT(AB2/UB2)  40.51
 !
       ENDIF
@@ -5142,7 +5172,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -5362,7 +5392,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -5608,7 +5638,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -5967,7 +5997,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -6261,7 +6291,6 @@
      &         SNLC1   ,FACHFR  ,DAL1    ,DAL2    ,DAL3    ,
      &         UFRIC   ,SMEBRK  ,HS      ,XIS     ,KTETA
 !
-!
       REAL  :: AC2(MDC,MSC,MCGRD)                                         30.21
       REAL  :: DEP2(MCGRD)
       REAL  :: ALIMW(MDC,MSC)
@@ -6420,11 +6449,12 @@
 !       *** linear wind input according to Cavaleri and Malanotte ***
 !       *** Rizolli (1981) for a third generation mode of SWAN    ***
 !
-        IF (PWIND(31) .GT. 1.E-20)                                        7/MAR
-     &  CALL SWIND0 (IDCMIN  ,IDCMAX  ,ISSTOP  ,
-     &               SPCSIG  ,THETAW  ,ANYWND  ,
-     &               UFRIC   ,FPM     ,PLWNDA  ,
-     &               IMATRA  ,SPCDIR  ,GENC0   )
+        IF (PWIND(31) .GT. 1.E-20) THEN
+           CALL SWIND0 (IDCMIN  ,IDCMAX  ,ISSTOP  ,
+     &                  SPCSIG  ,THETAW  ,ANYWND  ,
+     &                  UFRIC   ,FPM     ,PLWNDA  ,
+     &                  IMATRA  ,SPCDIR  ,GENC0   )
+        ENDIF
       ENDIF
 !
       IF ( IWIND .EQ. 1 .OR. IWIND .EQ. 2 ) THEN                          970220
@@ -6468,14 +6498,16 @@
       END IF
 !TIMG      CALL SWTSTO(132)                                                    40.23
 !
-!     Calculate whitecapping source term (six formulations)               40.31 40.02
+!     Calculate whitecapping source term (multiple formulations)          40.31 40.02
 !
 !TIMG      CALL SWTSTA(133)                                                    40.23
-      IF (IWCAP.GE.1) CALL SWCAP (SPCDIR  ,SPCSIG  ,KWAVE   ,AC2     ,    40.02
+      IF (IWCAP.GE.1) THEN
+      IF (IWCAP.LE.7) CALL SWCAP (SPCDIR  ,SPCSIG  ,KWAVE   ,AC2     ,    40.02
      &                            IDCMIN  ,IDCMAX  ,ISSTOP  ,             40.02
      &                            ETOT    ,IMATDA  ,IMATRA  ,PLWCAP  ,    40.02
      &                            CGO     ,UFRIC   ,                      40.53
      &                            DEP2    ,DISSC1  ,DISSC0  )             40.67 40.61 40.12
+      END IF
 !TIMG      CALL SWTSTO(133)                                                    40.23
 !
 !     compute nonlinear interactions, starting with triads                 NB!
@@ -6489,7 +6521,7 @@
 !
         IF ( ICUR .EQ. 0 .OR. ITER .GT. 1 ) THEN
 !
-           IF (ITRIAD.EQ.1) THEN
+           IF (ITRIAD.EQ.1.OR.ITRIAD.EQ.11) THEN
 !             LTA
               CALL SWLTA ( AC2   , DEP2  , CGO   , SPCSIG,                40.56
      &                     KWAVE , IMATRA, IMATDA, REDC0 , REDC1 ,        40.85
@@ -6734,7 +6766,6 @@
       IMPLICIT NONE
 !
 !
-!
 !   --|-----------------------------------------------------------|--
 !     | Delft University of Technology                            |
 !     | Faculty of Civil Engineering                              |
@@ -6746,7 +6777,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -6897,7 +6928,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -7041,7 +7072,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -7230,7 +7261,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -7841,7 +7872,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -8350,7 +8381,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -8468,7 +8499,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -8590,7 +8621,8 @@
 !                      terminated or not
 !     SWREDUCE         Performs a global reduction
 !
-      LOGICAL EQREAL, STPNOW
+      LOGICAL EQREAL
+!MPI      LOGICAL STPNOW
 !
 !  9. Subroutines calling
 !
@@ -8786,7 +8818,7 @@
 !MPI      IF (STPNOW()) RETURN
       IACCUR = IARR(1)
       WETGRD = IARR(2)
-      ACCUR  = REAL(IACCUR) * 100. / REAL(WETGRD)
+      ACCUR  = CEILING(REAL(IACCUR) * 10000. / REAL(WETGRD))/100.
 !$OMP END MASTER
 !$OMP BARRIER
 !
@@ -8828,7 +8860,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -9383,7 +9415,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as

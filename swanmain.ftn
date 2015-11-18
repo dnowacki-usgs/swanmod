@@ -46,7 +46,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -119,7 +119,8 @@
 
 !     --- start SWAN run
 
-      CALL SWMAIN                                                         40.31 34.01
+!     the main SWAN routine is called from the ADCIRC driver
+!NADC      CALL SWMAIN                                                         40.31 34.01
 
 999   CONTINUE
 
@@ -172,7 +173,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -788,7 +789,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -947,7 +948,7 @@
       VERTXT = BLANK                                                      40.03
       VERNUM = 41.01
       WRITE (VERTXT, '(F5.2)') VERNUM                                     40.03
-!      CALL BUGFIX ('A')
+      CALL BUGFIX ('A')
 !
       CALL OCPINI ('swaninit', .TRUE.,INERR)                              34.01
       IF (INERR.GT.0) RETURN                                              34.01
@@ -1056,6 +1057,7 @@
       FULCIR = .TRUE.
       SPDIR1 = 0.
       asort  = -999.                                                      41.48
+      CCURV  = .FALSE.                                                    41.53
 !     number of points needed in computational stencil:
       ICMAX  = 3
 !     ***** numerical scheme *****
@@ -1080,7 +1082,9 @@
       IREFR  = 1                                                          40.02
       ITFRE  = 1
       IWIND  = 0
-      IDRAG  = 2                                                          41.49 41.33
+!     when coupled with ADCIRC, the default is to use ADCIRC drag formulation
+!NADC      IDRAG  = 2                                                          41.49 41.33
+!ADC      IDRAG  = 0
       IGEN   = 3                                                          32.06
       IQUAD  = 2                                                          30.72
       IWCAP  = 1                                                          21/MAY
@@ -2450,7 +2454,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -2784,7 +2788,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -3167,7 +3171,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -3688,7 +3692,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4091,7 +4095,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4220,7 +4224,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4350,7 +4354,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4525,7 +4529,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4624,7 +4628,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4748,7 +4752,7 @@
 !
 !     *** Check formulation for whitecapping ***
 !
-      IF ( IWCAP.GT.7 ) THEN
+      IF ( IWCAP.GT.8 ) THEN
          WRITE (MSGSTR, '(A,I2,A)')
      &               'Unknown method for whitecapping (IWCAP=',IWCAP,')'
          CALL MSGERR( 1, TRIM(MSGSTR) )
@@ -4841,7 +4845,8 @@
 !     used in the CGRID command. This error should be corrected
 !     in the future
 !
-      IF (IWIND.EQ.3 .OR. IWIND.EQ.4) THEN                                30.60
+      IF (IWIND.EQ.3 .OR. IWIND.EQ.4
+     &                              ) THEN                                30.60
         IF (IQUAD .EQ. 0) THEN
           CALL MSGERR(2,'Quadruplets should be activated when SWAN  ')    30.60
           CALL MSGERR(2,'is running in a third generation mode and  ')    30.60
@@ -4966,7 +4971,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -5291,7 +5296,7 @@
 
 !     field 4: friction coeff.
       IF (IFLDYN(4) .EQ. 1) THEN
-        CALL FLFILE ( 4, 0, FRIC, 0.,                                     40.31
+        CALL FLFILE ( 4, 0, FRIC, (/0./),                                 40.31
      &               0, JFRC2, JFRC3, 0, 0, 0,
      &               1., 0.,                                              40.31 30.90
      &               COMPDA, XCGRID, YCGRID,
@@ -5318,7 +5323,7 @@
 
 !     field 7: water level
       IF (IFLDYN(7) .EQ. 1) THEN
-        CALL FLFILE ( 7, 0, WLEVL, 0.,                                    40.31
+        CALL FLFILE ( 7, 0, WLEVL, (/0./),                                40.31
      &               JWLV1, JWLV2, JWLV3, 0, 0, 0,
      &               1., 0.,                                              40.31 30.90
      &               COMPDA, XCGRID, YCGRID,
@@ -5468,7 +5473,7 @@
 
 !     field 11: field containing number of plants per square meter
       IF (IFLDYN(11) .EQ. 1) THEN
-        CALL FLFILE (11, 0, NPLAF, 0.,
+        CALL FLFILE (11, 0, NPLAF, (/0./),
      &               0, JNPLA2, JNPLA3, 0, 0, 0,
      &               1., 0.,
      &               COMPDA, XCGRID, YCGRID,
@@ -5495,7 +5500,7 @@
 
 !     field 12: field containing turbulent viscosity
       IF (IFLDYN(12) .EQ. 1) THEN
-        CALL FLFILE (12, 0, TURBF, 0.,
+        CALL FLFILE (12, 0, TURBF, (/0./),
      &               0, JTURB2, JTURB3, 0, 0, 0,
      &               1., 0.,
      &               COMPDA, XCGRID, YCGRID,
@@ -5522,7 +5527,7 @@
 
 !     field 13: field containing fluid mud layer
       IF (IFLDYN(13) .EQ. 1) THEN
-        CALL FLFILE (13, 0, MUDLF, 0.,
+        CALL FLFILE (13, 0, MUDLF, (/0./),
      &               JMUDL1, JMUDL2, JMUDL3, 0, 0, 0,
      &               1., 0.,
      &               COMPDA, XCGRID, YCGRID,
@@ -5580,7 +5585,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -6182,7 +6187,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -6311,8 +6316,8 @@
 !
 !  8. Subroutines used
 !
-!       GAMMA (in SWANSER)
-      REAL :: GAMMA                                                       40.03
+!       GAMMAF (in SWANSER)
+      REAL :: GAMMAF                                                      40.03
       LOGICAL EQREAL                                                      40.41
 !
 !  9. Subroutines calling
@@ -6423,7 +6428,7 @@
           IF (MS.GT.10.) THEN
             CTOT = SQRT(MS/(2.*PI)) * (1. + 0.25/MS)                      30.81 40.00
           ELSE
-            CTOT = 2.**MS * (GAMMA(1.+0.5*MS))**2 / (PI * GAMMA(1.+MS))   40.00
+            CTOT = 2.**MS * (GAMMAF(1.+0.5*MS))**2 / (PI*GAMMAF(1.+MS))   40.00
           ENDIF
           DSUM = 0.
           DO ID = 1, MDC
@@ -6614,7 +6619,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -6995,7 +7000,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -7291,7 +7296,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as

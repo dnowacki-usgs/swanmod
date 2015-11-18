@@ -34,6 +34,7 @@ mod_xnl4v5.$(EXTO) \
 SwanGriddata.$(EXTO) \
 SwanGridobjects.$(EXTO) \
 SwanCompdata.$(EXTO) \
+SdsBabanin.$(EXTO) \
 $(NCF_OBJS) \
 swanmain.$(EXTO) \
 swanpre1.$(EXTO) \

@@ -48,7 +48,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -425,8 +425,16 @@
 !
 !       ***** table output *****
         IF (RTYPE(1:3) .EQ. 'TAB') THEN
-          CALL SWTABP ( RTYPE, CORQ%OQI, CORQ%IVTYP, SNAME,               40.31
+!NPUN!NCF          IF (PARLL.AND.(RTYPE.EQ.'TABC')) THEN
+!PUN!NCF          IF (MNPROC>1.AND.(RTYPE.EQ.'TABC')) THEN
+!NCF!            --- use "block" intermediate file facility to pass data between cores
+!NCF             CALL SWBLKP ( CORQ%OQI, CORQ%IVTYP, MIP, 1, VOQR,
+!NCF     &                     VOQ(1), IONOD )
+!NCF          ELSE
+!NCF             CALL SWTABP ( RTYPE, CORQ%OQI, CORQ%OQR, CORQ%IVTYP, SNAME,
+!NNCF          CALL SWTABP ( RTYPE, CORQ%OQI, CORQ%IVTYP, SNAME,               40.31
      &                  MIP, VOQR, VOQ(1), IONOD )                        40.51 40.31
+!NCF          ENDIF
           IF (STPNOW()) RETURN                                            34.01
           GOTO 68                                                         40.00
         ENDIF
@@ -489,7 +497,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -817,7 +825,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -1086,7 +1094,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -1400,6 +1408,7 @@
       USE SwanGridobjects                                                 40.91
 !PUN      USE SIZES
 !
+      IMPLICIT NONE
 !
 !
 !   --|-----------------------------------------------------------|--
@@ -1413,7 +1422,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -1514,6 +1523,11 @@
 !PUN      LOGICAL    STPNOW
       LOGICAL    CROSS(4,MIP)                                             40.86
       LOGICAL, ALLOCATABLE :: LTMP(:)                                     40.91
+!
+      INTEGER MIP,IENT,JJ,IVXP,IVYP,IVDIST,IP,JVQX,JVQY,
+     &        KK, IXB, IXE, IYB, IYE, IX, IY
+      REAL UXLOC,UYLOC,RDIST,RDX,RDY,RR,UBLOC,F1,RTMP,XP1,YP1
+!
       type(verttype), dimension(:), pointer :: vert                       40.91
       SAVE IENT
       DATA IENT /0/
@@ -2639,7 +2653,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -2903,7 +2917,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -3044,6 +3058,8 @@
       INTEGER    VOQR(*)        ,BKC           ,IVOTP(NVOTP)      ,
      &           KGRPNT(MXC,MYC)                                          30.21
 !
+      REAL, ALLOCATABLE :: FLUX(:,:,:), FLOC(:,:)
+!
       LOGICAL    OQPROC(*), EQREAL                                        30.72
       LOGICAL :: EXCPT     ! if true value in point is undefined          40.86
       SAVE IENT, IVOTP
@@ -3051,6 +3067,21 @@
       DATA IVOTP /10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 28, 32, 33,     20.61
      &            42, 43, 44, 47, 48, 53, 58, 59, 71/                     41.15 40.64 40.51 40.41 40.00
       CALL STRACE (IENT, 'SWOEXA')
+!
+!     in case of transport of energy, compute the energy flux in all grid points
+!     (energy flux will then be interpolated at output points!)
+!
+      IF (OQPROC(15).OR.OQPROC(19)) THEN
+         IF(.NOT.ALLOCATED(FLUX)) ALLOCATE(FLUX(MDC,MSC,MCGRD))
+         IF(.NOT.ALLOCATED(FLOC)) ALLOCATE(FLOC(MDC,MSC))
+         DO IP=1, MCGRD
+            DEPLOC = DEPXY(IP)
+            CALL KSCIP1 (MSC, SPCSIG, DEPLOC, WK, CG, NE, NED)
+            DO IS=1, MSC
+               FLUX(:,IS,IP) = CG(IS)*AC2(:,IS,IP)
+            ENDDO
+         ENDDO
+      ENDIF
 !
 !     loop over all output points
 !
@@ -3076,19 +3107,25 @@
         IF (OPTG.NE.5) THEN                                               40.80
            CALL SWOINA (XC(IP), YC(IP), AC2, ACLOC, KGRPNT, DEPXY,        40.86 30.50
      &                  CROSS(1,IP), EXCPT)                               40.86
+           IF (OQPROC(15).OR.OQPROC(19))
+     &        CALL SWOINA (XC(IP), YC(IP), FLUX, FLOC, KGRPNT, DEPXY,
+     &                     CROSS(1,IP), EXCPT)
         ELSE                                                              40.80
            IF (.NOT.LCOMPGRD) THEN
               IF (.NOT.EQREAL(VOQ(IP,1),OVEXCV(1))) XP=VOQ(IP,1)-XOFFS    40.80
               IF (.NOT.EQREAL(VOQ(IP,2),OVEXCV(2))) YP=VOQ(IP,2)-YOFFS    40.80
               CALL SwanInterpolateAc ( ACLOC, XP, YP, AC2, EXCPT )        40.80
+              IF (OQPROC(15).OR.OQPROC(19))
+     &           CALL SwanInterpolateAc ( FLOC, XP, YP, FLUX, EXCPT )
            ELSE
               ACLOC(:,:) = AC2(:,:,IP)
+              IF (OQPROC(15).OR.OQPROC(19)) FLOC(:,:) = FLUX(:,:,IP)
               EXCPT = .FALSE.
            ENDIF
         ENDIF                                                             40.80
         IF (EXCPT) GOTO 700                                               40.86
 !
-!       Coefficients for high frequency tail
+!       coefficient for high frequency tail
 !
         EFTAIL = 1. / (PWTAIL(1) - 1.)
 !
@@ -3744,9 +3781,8 @@
                   DSIG = 0.5 * (SPCSIG(ISIGM+1) - SPCSIG(ISIGM-1))        30.72
                 ENDIF
                 SIG2 = SPCSIG(ISIGM)                                      30.72
-                CS   = CG(ISIGM)*SIG2
                 DO ID=1,MDC
-                   CGE = DSIG * CS * ACLOC(ID,ISIGM)
+                   CGE = DSIG * SIG2 * FLOC(ID,ISIGM)
                    CEX = CEX + CGE * SPCDIR(ID,2)
                    CEY = CEY + CGE * SPCDIR(ID,3)
                    IF (ICUR.EQ.1) THEN
@@ -3762,10 +3798,10 @@
               IF (ICUR.EQ.1)                                              40.87
      &           ETOT=SwanIntgratSpc(0.,FMIN, FMAX, SPCSIG, SPCDIR(1,1),  40.87
      &                               WK, ECS, 0., 0., ACLOC, 1)           40.87
-              CEX = SwanIntgratSpc(1., FMIN, FMAX, SPCSIG, SPCDIR(1,1),   40.87
-     &                             CG, SPCDIR(1,2), 0., 0., ACLOC, 4)     40.87
-              CEY = SwanIntgratSpc(1., FMIN, FMAX, SPCSIG, SPCDIR(1,1),   40.87
-     &                             CG, SPCDIR(1,3), 0., 0., ACLOC, 4)     40.87
+              CEX = SwanIntgratSpc(0., FMIN, FMAX, SPCSIG, SPCDIR(1,1),   40.87
+     &                             CG, SPCDIR(1,2), 0., 0., FLOC, 1)      40.87
+              CEY = SwanIntgratSpc(0., FMIN, FMAX, SPCSIG, SPCDIR(1,1),   40.87
+     &                             CG, SPCDIR(1,3), 0., 0., FLOC, 1)      40.87
            ENDIF                                                          40.87
 !
            IF (ICUR.EQ.1) THEN
@@ -3818,9 +3854,8 @@
                   DSIG = 0.5 * (SPCSIG(ISIGM+1) - SPCSIG(ISIGM-1))        30.72
                 ENDIF
                 SIG2 = SPCSIG(ISIGM)                                      30.72
-                CS   = CG(ISIGM)*SIG2
                 DO ID=1,MDC
-                   CGE = DSIG * CS * ACLOC(ID,ISIGM)
+                   CGE = DSIG * SIG2 * FLOC(ID,ISIGM)
                    CEX = CEX + CGE * SPCDIR(ID,2)
                    CEY = CEY + CGE * SPCDIR(ID,3)
                    IF (ICUR.EQ.1) THEN
@@ -3836,10 +3871,10 @@
               IF (ICUR.EQ.1)                                              40.87
      &           ETOT=SwanIntgratSpc(0.,FMIN, FMAX, SPCSIG, SPCDIR(1,1),  40.87
      &                               WK, ECS, 0., 0., ACLOC, 1)           40.87
-              CEX = SwanIntgratSpc(1., FMIN, FMAX, SPCSIG, SPCDIR(1,1),   40.87
-     &                             CG, SPCDIR(1,2), 0., 0., ACLOC, 4)     40.87
-              CEY = SwanIntgratSpc(1., FMIN, FMAX, SPCSIG, SPCDIR(1,1),   40.87
-     &                             CG, SPCDIR(1,3), 0., 0., ACLOC, 4)     40.87
+              CEX = SwanIntgratSpc(0., FMIN, FMAX, SPCSIG, SPCDIR(1,1),   40.87
+     &                             CG, SPCDIR(1,2), 0., 0., FLOC, 1)      40.87
+              CEY = SwanIntgratSpc(0., FMIN, FMAX, SPCSIG, SPCDIR(1,1),   40.87
+     &                             CG, SPCDIR(1,3), 0., 0., FLOC, 1)      40.87
               CEX = CEX/DDIR                                              40.87
               CEY = CEY/DDIR                                              40.87
            ENDIF                                                          40.87
@@ -4407,6 +4442,8 @@
 !
  800  CONTINUE
 !
+      IF (ALLOCATED(FLUX)) DEALLOCATE(FLUX)
+      IF (ALLOCATED(FLOC)) DEALLOCATE(FLOC)
       RETURN
 !     end of subroutine SWOEXA
       END
@@ -4432,7 +4469,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4652,7 +4689,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as

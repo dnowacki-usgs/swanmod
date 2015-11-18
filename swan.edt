@@ -6,7 +6,7 @@
 !   SET  [level]  [nor]  [depmin]  [maxmes]                                 &
 !        [maxerr]  [grav]  [rho] [cdcap] [inrhog]                           &
 !        [hsrerr]  CARTesian|NAUTical  [pwtail]                             &
-!        [froudmax]  [sort]  [printf]  [prtest]
+!        [froudmax]  [sort]  CURV  [printf]  [prtest]
 !
 !   MODE  / STATIONARY \  / TWODimensional
 !         \ DYNAMIC    /  \ ONEDimensional
@@ -15,7 +15,7 @@
 !                \ SPHErical      CCM|QC  /
 !
 !   CGRID  / REGular [xpc] [ypc] [alpc] [xlenc] [ylenc] [mxc] [myc] \
-!         <  CURVilinear [mxc] [myc]  (EXC [xexc] [yexc])            >      &
+!         <  CURVilinear [mxc] [myc]  (EXC [xexc] [yexc]) [alpc]     >      &
 !          \ UNSTRUCtured                                           /
 !
 !          / CIRcle               \

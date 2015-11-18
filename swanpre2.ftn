@@ -36,7 +36,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -202,7 +202,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -1028,6 +1028,7 @@
       USE SWCOMM4                                                         40.41
       USE OUTP_DATA                                                       40.13
       USE M_PARALL                                                        40.31
+!NCF      USE swn_outnc                                                       41.52
 !PUN      USE SIZES                                                           40.95
 !
 !
@@ -1042,7 +1043,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -1246,6 +1247,14 @@
   70      CALL SVARTP (IVTYPE)
           IF (IVTYPE .EQ. 98) GOTO 91                                     30.00
           IF (IVTYPE .NE. 99) THEN
+!NCF             IF ( INDEX(FILENM,'.NC').NE.0  .OR.                          41.52
+!NCF     &            INDEX(FILENM,'.nc').NE.0 ) THEN                         41.52
+!NCF                IF ( IVTYPE.GT.2 ) THEN                                   41.52
+!NCF                   call stnames_init()                                    41.52
+!NCF                   IF ( STNAMES(IVTYPE,1).EQ. ' ' ) CALL MSGERR (2,       41.52
+!NCF     &                   'netCDF output not allowed for '//TRIM(FILENM))  41.52
+!NCF                ENDIF                                                     41.52
+!NCF             ENDIF                                                        41.52
              CALL INREAL ('UNIT', DFAC, 'STA', -1.)
              IF (OVSVTY(IVTYPE).EQ.5) THEN
                CALL MSGERR (2,
@@ -1428,6 +1437,11 @@
 !       unit reference number NREF is 0, will be determined in output module
         CALL INCSTR ('FNAME', FILENM, 'STA', ' ')
         IF (FILENM .NE. '    ') THEN
+!NCF          IF ( INDEX( FILENM, '.NC' ).NE.0 .OR.
+!NCF     &         INDEX (FILENM, '.nc' ).NE.0 ) THEN
+!NCF            RTYPE = 'TABC'
+!NCF            ORQTMP%RQTYPE = RTYPE
+!NCF          ENDIF
           NREF = 0
 !         --- append node number to FILENM in case of                     40.30
 !             parallel computing                                          40.30
@@ -1453,6 +1467,14 @@
    80   CALL SVARTP (IVTYPE)
         IF (IVTYPE .EQ. 98) GOTO 90                                       30.00
         IF (IVTYPE .NE. 99) THEN
+!NCF           IF ( INDEX(FILENM,'.NC').NE.0  .OR.                            41.52
+!NCF     &          INDEX(FILENM,'.nc').NE.0 ) THEN                           41.52
+!NCF              IF ( IVTYPE.GT.2 ) THEN                                     41.52
+!NCF                 call stnames_init()                                      41.52
+!NCF                 IF ( STNAMES(IVTYPE,1).EQ. ' ' ) CALL MSGERR (2,         41.52
+!NCF     &                   'netCDF output not allowed for '//TRIM(FILENM))  41.52
+!NCF              ENDIF                                                       41.52
+!NCF           ENDIF                                                          41.52
           IF (OVSVTY(IVTYPE).EQ.5) THEN
             CALL MSGERR (2,
      &      'Type of output not allowed for this quantity')
@@ -1570,7 +1592,12 @@
            END DO                                                         40.31
            DEALLOCATE(TMP)                                                40.31
         END IF                                                            40.31
+!NCF        IF ( RTYPE.EQ.'TABC') THEN
+!NCF          ALLOCATE(ORQTMP%FAC(NVAR))
+!NCF          ORQTMP%FAC=1.
+!NCF        ELSE
         ALLOCATE(ORQTMP%FAC(0))                                           40.31
+!NCF        ENDIF
 
         IF (IVTYPE .EQ. 98) THEN                                          30.00
           IF (NSTATM.EQ.0) CALL MSGERR (3,
@@ -1602,8 +1629,8 @@
       ENDIF
 !
 !   --------------------------------------------------------------------------
-!   SPECout 'sname'  SPEC1D/SPEC2D  ABS/REL   'fname'                       &
-!NCF!                    (MONth  ESCAle MDGRID COMPress) (NOT documented)       &
+!   SPECout 'sname'  SPEC1D/SPEC2D  ABS/REL   'fname'                        &
+!NCF!                    (MONth  ESCAle MDGRID COMPress NOAUX) (NOT documented)  &
 !                    (OUTPUT [tbegspc] [deltspc] SEC/MIN/HR/DAY)
 !   --------------------------------------------------------------------------
 !   SPEC   output of spectra
@@ -1668,6 +1695,10 @@
 !NCF        CALL INKEYW ('STA', ' ')
 !NCF        IF (KEYWIS('MDGRID')) THEN
 !NCF           ORQTMP%OQI(4) = ORQTMP%OQI(4) + 8
+!NCF        ENDIF
+!NCF        CALL INKEYW ('STA', ' ')
+!NCF        IF (KEYWIS('NOAUX')) THEN
+!NCF           ORQTMP%OQI(4) = ORQTMP%OQI(4) + 16
 !NCF        ENDIF
 !NCF        CALL INKEYW ('STA', ' ')
 !
@@ -1752,6 +1783,10 @@
           OUTP_FILES(NREOQ) = FILENM                                      40.31 40.13
           NVAR = 0                                                        40.31
           ORQTMP%OQI(3) = NVAR                                            40.31
+!NCF!         scale spectra and do not store auxillary variables
+!NCF          IF ( INDEX( FILENM, '.NC'  ).NE.0 .OR.
+!NCF     &         INDEX (FILENM, '.nc'  ).NE.0 )
+!NCF     &       ORQTMP%OQI(4) = 18
           ALLOCATE(ORQTMP%IVTYP(0))                                       40.31
           ALLOCATE(ORQTMP%FAC(0))                                         40.31
 !
@@ -1808,7 +1843,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -1978,7 +2013,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -2096,7 +2131,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -2228,7 +2263,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -3474,7 +3509,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -3965,7 +4000,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -4555,7 +4590,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -5016,7 +5051,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -5336,7 +5371,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
@@ -5500,7 +5535,7 @@
 !
 !
 !     SWAN (Simulating WAves Nearshore); a third generation wave model
-!     Copyright (C) 1993-2014  Delft University of Technology
+!     Copyright (C) 1993-2015  Delft University of Technology
 !
 !     This program is free software; you can redistribute it and/or
 !     modify it under the terms of the GNU General Public License as
