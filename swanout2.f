@@ -260,7 +260,7 @@
      &                    VOQ(1,VOQR(IVTYPE)), NREF, IREC(IRQ),           40.51
      &                    IDLA, OVEXCV(IVTYPE) )
 !NCF          ELSE IF (NCF) THEN                                              41.40
-!NCF             IF ( IVTYPE.GT.3 ) THEN
+!NCF             IF (IVTYPE.GT.2.AND.IVTYPE.NE.40) THEN
 !NCF                CALL swn_outnc_appendblock(MYK, MXK, IVTYPE, OQI(1),
 !NCF     &                                     IRQ, VOQ(1,VOQR(IVTYPE)),
 !NCF     &                                     OVEXCV(IVTYPE), 1)
@@ -1067,7 +1067,7 @@
 !NCF      IF (RTYPE.EQ.'TABC') THEN
 !NCF        DO JVAR = 1, NVAR
 !NCF          IVTYPE = IVTYP(JVAR)
-!NCF          IF (RTYPE.EQ.'TABC') THEN
+!NCF          IF (IVTYPE.GT.3.AND.IVTYPE.NE.40) THEN
 !NCF            CALL swn_outnc_appendblock(1, MIP, IVTYPE, OQI(1),
 !NCF     &                                 OQI(2), VOQ(1,VOQR(IVTYPE)),
 !NCF     &                                 OVEXCV(IVTYPE), 1)

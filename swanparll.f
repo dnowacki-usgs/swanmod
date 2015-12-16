@@ -4664,7 +4664,7 @@
                CALL SWRMAT( MYK, MXK, NAMVAR, VOQ(1,1), NREF,
      &                      IREC(IRQ), IDLA, OVEXCV(IVTYPE) )             40.51
 !NCF            ELSE IF (NCF) THEN                                            41.40
-!NCF               IF ( IVTYPE.GT.3 ) THEN
+!NCF               IF ( IVTYPE.GT.2.AND.IVTYPE.NE.40 ) THEN
 !NCF                  CALL swn_outnc_appendblock(MYK, MXK, IVTYPE, OQI(1),
 !NCF     &                                       IRQ, VOQ(1,1),
 !NCF     &                                       OVEXCV(IVTYPE), 1)

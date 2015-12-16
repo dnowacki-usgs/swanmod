@@ -160,7 +160,7 @@
             character(len=10)                        :: lunit = 'degrees'
             integer                                  :: pnt_dimid, &
                                                         lon_varid, lat_varid, &
-                                                        npoints = 0, ips_varid, &
+                                                        npoints = 0, ips_varid = 0, &
                                                         xdimlen = 0, ydimlen = 0
         end type pntgrid_type
 

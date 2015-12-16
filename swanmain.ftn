@@ -26,7 +26,7 @@
 !
 !***********************************************************************
 !                                                                      *
-!NADC      PROGRAM SWAN
+!NADC!NCOH      PROGRAM SWAN
 !ADC      SUBROUTINE SWAN
 !                                                                      *
 !***********************************************************************
@@ -949,6 +949,7 @@
       VERNUM = 41.01
       WRITE (VERTXT, '(F5.2)') VERNUM                                     40.03
       CALL BUGFIX ('A')
+      CALL BUGFIX ('B')
 !
       CALL OCPINI ('swaninit', .TRUE.,INERR)                              34.01
       IF (INERR.GT.0) RETURN                                              34.01
@@ -1059,7 +1060,7 @@
       asort  = -999.                                                      41.48
       CCURV  = .FALSE.                                                    41.53
 !     number of points needed in computational stencil:
-      ICMAX  = 3
+      ICMAX  = 5
 !     ***** numerical scheme *****
       NCOR   = 1
       NSTATM = -1                                                         40.00
@@ -1282,7 +1283,7 @@
 !
 !     --- computation of Ctheta based on wave number
 !
-      PNUMS(32) = 0.                                                      41.07
+      PNUMS(32) = 1.                                                      41.07
 !
 !     --- parameters for limiting Csigma and Ctheta
 !
@@ -4845,6 +4846,13 @@
 !     used in the CGRID command. This error should be corrected
 !     in the future
 !
+      IF (ICUR.NE.0 .AND. (IQUAD.EQ.1 .OR. IQUAD.EQ.2)) THEN              41.55
+         CALL MSGERR(1,'Quadruplets will be updated per iteration')       41.55
+         CALL MSGERR(1,'instead of per sweep. This will increase')        41.55
+         CALL MSGERR(1,'amount of internal memory with a factor 2')       41.55
+         IQUAD = 3                                                        41.55
+      ENDIF                                                               41.55
+!
       IF (IWIND.EQ.3 .OR. IWIND.EQ.4
      &                              ) THEN                                30.60
         IF (IQUAD .EQ. 0) THEN
@@ -7276,6 +7284,7 @@
 !****************************************************************
 !
       USE M_WCAP
+      USE M_SNL4
       USE M_GENARR
       USE M_PARALL
       USE M_DIFFR
@@ -7339,6 +7348,9 @@
 ! 13. Source text
 !
       IF (ALLOCATED(SIGPOW))   DEALLOCATE(SIGPOW)
+      IF (ALLOCATED(CNL4_1))   DEALLOCATE(CNL4_1)
+      IF (ALLOCATED(CNL4_2))   DEALLOCATE(CNL4_2)
+      IF (ALLOCATED(LAMBDA))   DEALLOCATE(LAMBDA)
       IF (ALLOCATED(KGRPNT))   DEALLOCATE(KGRPNT)
       IF (ALLOCATED(KGRBND))   DEALLOCATE(KGRBND)
       IF (ALLOCATED(XYTST ))   DEALLOCATE(XYTST )

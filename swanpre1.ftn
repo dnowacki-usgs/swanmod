@@ -750,7 +750,7 @@
 !
       IF (KEYWIS ('PROP')) THEN                                           40.02
         CALL INKEYW ('STA','    ')                                        40.02
-        IF (KEYWIS ('BSBT')) THEN                                         40.02
+        IF (KEYWIS ('BSBT') .OR. KEYWIS ('BTBS')) THEN                    40.02
           PROPSN = 1                                                      40.02
           PROPSS = 1                                                      40.02
         ELSE IF (KEYWIS ('GSE')) THEN                                     40.02
@@ -1659,7 +1659,7 @@
 !                   <                            >  [limiter]   )     &   40.03
 !                    | NONSTat  [mxitns]        |
 !
-!           ( DIRimpl [cdd] [cdlim]  WNUMber                       )  &
+!           ( DIRimpl [cdd] [cdlim]  DEP|WNUM                      )  &
 !
 !           ( REFRLim [frlim] [power]          (NOT documented)    )  &   41.06
 !
@@ -1728,13 +1728,16 @@
           CALL INREAL ('CDD'    , PNUMS(6) , 'UNC', 0.)
           CALL INREAL ('CDLIM'  , PNUMS(17), 'UNC', 0.)                   30.80
           IF (PNUMS(17).LT.0.) IREFR = 1                                  30.80
-          IF (PNUMS(17).GT.0.) IREFR = -1                                 40.02
           IF (EQREAL(PNUMS(17),0.)) THEN                                  30.80
             IREFR = 0                                                     30.80
             CALL MSGERR(0, 'Refraction deactivated')                      40.02
           ENDIF
-          CALL INKEYW ('STA','    ')                                      41.07
-          IF (KEYWIS ('WNUM')) PNUMS(32) = 1.                             41.07
+          CALL INKEYW ('STA', 'WNUM')                                     41.56
+          IF (KEYWIS('DEP')) THEN
+             PNUMS(32) = 0.                                               41.56
+          ELSE IF (KEYWIS('WNUM')) THEN
+             PNUMS(32) = 1.                                               41.07
+          ENDIF
         ENDIF
 !
 !       limit Ctheta if user want so                                      41.06

@@ -1469,10 +1469,10 @@
         IF (IVTYPE .NE. 99) THEN
 !NCF           IF ( INDEX(FILENM,'.NC').NE.0  .OR.                            41.52
 !NCF     &          INDEX(FILENM,'.nc').NE.0 ) THEN                           41.52
-!NCF              IF ( IVTYPE.GT.2 ) THEN                                     41.52
+!NCF              IF ( IVTYPE.GT.2.AND.IVTYPE.NE.40 ) THEN                    41.52
 !NCF                 call stnames_init()                                      41.52
 !NCF                 IF ( STNAMES(IVTYPE,1).EQ. ' ' ) CALL MSGERR (2,         41.52
-!NCF     &                   'netCDF output not allowed for '//TRIM(FILENM))  41.52
+!NCF     &                 'netCDF table does not support '//OVKEYW(IVTYPE))  41.52
 !NCF              ENDIF                                                       41.52
 !NCF           ENDIF                                                          41.52
           IF (OVSVTY(IVTYPE).EQ.5) THEN
