@@ -352,30 +352,11 @@
 !           *** PBOT(4) = Mf                      ***
 !           *** AKN = PBOT(5) = [kn]  (roughness) ***
 !
-          IF ( (ABRBOT / AKN ) .GT. 1.57 ) THEN
-            XDUM = PBOT(4) + LOG10 ( ABRBOT / AKN )
-!
-!               *** solving the implicit equation using a Newton ***
-!               *** Rapshon iteration proces : a + log a = b     ***
-!               *** the start value for ADUM = 0.3 because 0.3626 ***
-!               *** is the minimum value of ADUM with b=-0.08.    ***
-!
-            ADUM = 0.3
-            DO 28 J = 1, 50
-              CDUM  = ADUM
-              DDUM  = ( ADUM + LOG10(ADUM) - XDUM ) /
-     &                                          ( 1.+ ( 1. / ADUM) )
-              ADUM  = ADUM - DDUM
-              IF ( ABS(CDUM - ADUM) .LT. 1.E-4 ) GOTO 29
-  28        CONTINUE
-            WRITE(*,*) ' error in iteration fw: Madsen formulation'
-  29        CONTINUE
-!                                                 1               1
-!               *** computation of FW -->  A = ----- --> FW = -----
-!                                              4 uFW          16 A**2
-            FW = 1. / (16. * ADUM**2)
+          IF ( (ABRBOT / AKN ) .GT. 0.0369 ) THEN
+!           Implement values in Rogers et al 2015
+            FW = EXP(5.213*((AKN/ABRBOT)**0.194)-5.977)
           ELSE
-            FW = 0.3
+            FW = 50
           ENDIF
           CFBOT =  UBOT(KCGRD(1)) * FW / (SQRT(2.) * GRAV)
         ELSEIF ( IBOT.EQ.4 ) THEN
