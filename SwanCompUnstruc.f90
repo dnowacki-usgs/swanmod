@@ -38,6 +38,7 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
 !   41.07: Marcel Zijlema
 !   41.10: Marcel Zijlema
 !   41.20: Casey Dietrich
+!   41.60: Marcel Zijlema
 !
 !   Updates
 !
@@ -48,6 +49,7 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
 !   41.07,   August 2009: bug fix: never-ending sweep is prevented
 !   41.10,   August 2009: parallelization using OpenMP directives
 !   41.20,     June 2010: extension to tightly coupled ADCIRC+SWAN model
+!   41.60,     July 2015: more accurate computation of gradients of depth or wave number for turning rate
 !
 !   Purpose
 !
@@ -173,6 +175,8 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
     real                                  :: dal1      ! a coefficent for the 4 wave-wave interactions
     real                                  :: dal2      ! another coefficent for the 4 wave-wave interactions
     real                                  :: dal3      ! just another coefficent for the 4 wave-wave interactions
+    real                                  :: dhdx      ! derivative of depth in x-direction
+    real                                  :: dhdy      ! derivative of depth in y-direction
 !PUN    real(SZ), dimension(1)                :: dum1      ! a dummy real meant for UPDATER
 !PUN    real(SZ), dimension(1)                :: dum2      ! a dummy real meant for UPDATER
     real                                  :: dummy     ! dummy variable (to be used in existing SWAN routine call)
@@ -220,6 +224,8 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
     real, dimension(:,:), allocatable     :: da2p      ! implicit interaction contribution of second quadruplet, current bin +1 (unfolded space)
     real, dimension(:,:,:), allocatable   :: disc0     ! explicit part of dissipation in present vertex for output purposes
     real, dimension(:,:,:), allocatable   :: disc1     ! implicit part of dissipation in present vertex for output purposes
+    real, dimension(:), allocatable       :: dkdx      ! derivative of wave number in x-direction
+    real, dimension(:), allocatable       :: dkdy      ! derivative of wave number in y-direction
     real, dimension(:,:), allocatable     :: dmw       ! mud dissipation rate
     real, dimension(:,:), allocatable     :: dsnl      ! total interaction contribution of quadruplets to the main diagonal matrix
     real, dimension(:,:,:), allocatable   :: genc0     ! explicit part of generation in present vertex for output purposes
@@ -354,6 +360,7 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
     !$omp private(ivert, nupdv, jc, k, j, icell, v, vu, l, swpnr, rdx, rdy, lpredt, vb, ve, iface, link, inocnt) &
     !$omp private(iddlow, iddtop, idtot, isslow, isstop, istot) &
     !$omp private(abrbot, kmespc, idwmin, idwmax, hs, etot, qbloc, ufric, fpm, thetaw, hm, wind10, smebrk) &
+    !$omp private(dhdx, dhdy, dkdx, dkdy) &
     !$omp copyin(ICMAX, COSLAT, IPTST, TESTFL)
     !
     ! print number of threads set by environment
@@ -405,6 +412,9 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
     allocate( trac0(MDC,MSC,MTRNP))
     allocate( trac1(MDC,MSC,MTRNP))
     allocate(leakcf(MDC,MSC      ))
+    !
+    allocate(dkdx(MSC))
+    allocate(dkdy(MSC))
     !
     ! calculate ranges of spectral space for arrays related to 4 wave-wave interactions
     !
@@ -684,6 +694,10 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
                   enddo
                endif
                !
+               ! compute gradients of depth or wave number in present vertex meant for computing turning rate
+               !
+               call SwanGradDepthorK ( compda(1,JDP2), compda(1,JMUDL2), spcsig, dhdx, dhdy, dkdx, dkdy, ivert )
+               !
                nupdv = 0
                !
                celloop: do jc = 1, vert(ivert)%noc
@@ -785,10 +799,10 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
 !TIMG                     call SWTSTA(113)
                      call SwanPropvelS ( cad             , cas           , compda(1,JVX2), compda(1,JVY2), &
                                          compda(1,JDP1)  , compda(1,JDP2), cax           , cay           , &
-                                         kwave           , cgo           , spcsig        , idcmin        , &
-                                         idcmax          , spcdir(1,2)   , spcdir(1,3)   , spcdir(1,4)   , &
+                                         kwave           , cgo           , spcsig        , iddlow        , &
+                                         iddtop          , spcdir(1,2)   , spcdir(1,3)   , spcdir(1,4)   , &
                                          spcdir(1,5)     , spcdir(1,6)   , rdx           , rdy           , &
-                                         compda(1,JMUDL2), jc            )
+                                         dhdx            , dhdy          , dkdx          , dkdy          )
 !TIMG                     call SWTSTO(113)
                      !
                      ! estimate action density in case of first iteration at cold start in stationary mode
@@ -1302,6 +1316,9 @@ subroutine SwanCompUnstruc ( ac2, ac1, compda, spcsig, spcdir, xytst, cross, it 
     deallocate( trac0)
     deallocate( trac1)
     deallocate(leakcf)
+    !
+    deallocate(dkdx)
+    deallocate(dkdy)
     !
     deallocate(  ue)
     deallocate( sa1)

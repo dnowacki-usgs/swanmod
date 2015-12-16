@@ -1382,6 +1382,7 @@ contains
                                                  xpctime, ilpos, ncid
         integer, save                         :: IENT=0
         if (LTRACE) call STRACE (IENT,'swn_outnc_appendblock')
+        if ( ivtype == 40 ) return
 
         ncid = nref + ncoffset(irq)
 
