@@ -358,6 +358,10 @@
           ELSE
             FW = 50
           ENDIF
+          ! output debugging variables to fort.60
+          write(60,*) AKN, ABRBOT
+          write(61,*) AKN/ABRBOT, FW
+          
           CFBOT =  UBOT(KCGRD(1)) * FW / (SQRT(2.) * GRAV)
         ELSEIF ( IBOT.EQ.4 ) THEN
 !
