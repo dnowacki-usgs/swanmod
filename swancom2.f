@@ -354,13 +354,15 @@
 !
           IF ( (ABRBOT / AKN ) .GT. 0.0369 ) THEN
 !           Implement values in Rogers et al 2015
-            FW = EXP(5.213*((AKN/ABRBOT)**0.194)-5.977)
+!            FW = EXP(5.213*((AKN/ABRBOT)**0.194)-5.977)
+!           Use the Nielsen 1992 values instead of Swart 1974 values
+            FW = EXP(5.5*((AKN/ABRBOT)**0.2)-6.3)
           ELSE
             FW = 50
           ENDIF
           ! output debugging variables to fort.60
           write(60,*) AKN, ABRBOT
-          write(61,*) AKN/ABRBOT, FW
+          write(61,*) KCGRD(1), ABRBOT/AKN, FW
           
           CFBOT =  UBOT(KCGRD(1)) * FW / (SQRT(2.) * GRAV)
         ELSEIF ( IBOT.EQ.4 ) THEN
