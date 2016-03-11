@@ -356,6 +356,7 @@
         CALL SWOEXD (OQPROC, MIP, VOQ(1+2*MIP),                           40.31 30.90
      &               VOQ(1+3*MIP), VOQR, VOQ(1),                          40.31 30.90
      &               COMPDA, KGRPNT, FORCE, CROSS, IONOD                  40.86 40.80 40.31
+!ADC     &               ,IRQ                                                 41.36
 !PUN     &               ,IRQ                                                 41.36
      &              )
 !PUN        IF (STPNOW()) RETURN
@@ -1389,6 +1390,7 @@
 !                                                                      *
       SUBROUTINE SWOEXD (OQPROC, MIP, XC, YC, VOQR, VOQ, COMPDA ,KGRPNT,  30.21
      &                   FORCE, CROSS, IONOD                              40.86 40.80 40.31
+!ADC     &                   ,IRQ                                             41.36
 !PUN     &                   ,IRQ                                             41.36
      &                  )
 !                                                                      *
@@ -1515,6 +1517,7 @@
       REAL       FORCE(nverts,2)                                          40.80
       INTEGER    VOQR(*), KGRPNT(MXC,MYC)
       INTEGER    IONOD(*)                                                 40.31
+!ADC      INTEGER    IRQ                                                      41.36
 !PUN      INTEGER    IRQ                                                      41.36
 !PUN      INTEGER    IVERTP, NOWNV
 !PUN      INTEGER    NREF, IOSTAT
