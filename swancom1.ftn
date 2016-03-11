@@ -123,6 +123,7 @@
 !     40.41: Andre van der Westhuysen
 !     40.41: Marcel Zijlema
 !     40.41: Andre van der Westhuysen
+!     40.59: W. Erick Rogers
 !
 !  1. Updates
 !
@@ -182,6 +183,7 @@
 !     40.41, Jun. 04: Implementation of curvature-based convergence check
 !     40.41, Aug. 04: some code optimization
 !     40.41, Oct. 04: common blocks replaced by modules, include files removed
+!     40.59, Aug. 07: stencil modification
 !
 !  2. Purpose
 !
@@ -921,10 +923,10 @@
         ICMAX  = 10                                                       33.08
         LSTCP  = 3                                                        40.31
       ELSE IF (PROPSC.EQ.2) THEN                                          33.10
-        ICMAX  = 5                                                        33.10
+        ICMAX  = 7                                                        40.59 33.10
         LSTCP  = 2                                                        40.31
       ELSE
-        ICMAX  = 3                                                        33.10
+        ICMAX  = 5                                                        40.59 33.10
         LSTCP  = 1                                                        40.31
       ENDIF                                                               33.08
 
@@ -2148,6 +2150,7 @@
 !     40.28: Annette Kieftenburg
 !     40.30: Marcel Zijlema
 !     40.41: Marcel Zijlema
+!     40.59: W. Erick Rogers
 !     40.61: Roop Lalbeharry
 !
 !  1. Updates
@@ -2198,6 +2201,8 @@
 !                     with other subroutines
 !     40.41, Aug. 04: code optimization
 !     40.41, Oct. 04: common blocks replaced by modules, include files removed
+!     40.59, Aug. 07: stencil numbering made consistent, so that if used for
+!                     varied purposes (e.g. SPROSD), if-then not required
 !     40.61, Nov. 06: Hersbach and Janssen (1999) limiter option added
 !
 !  2. Purpose
@@ -2208,56 +2213,99 @@
 !  3. Method
 !
 !
-!    THIS IS THE STENCIL USED WITH THE S&L SCHEME:                  33.08
-!                                                                   33.08
-!      IY+1                      o 4                                33.08
-!                                |                                  33.08
-!                 8    6    2    | 1   5                            33.08
-!      IY         O----O----O----*----O                             33.08
-!                                |                                  33.08
-!                           10   |                                  33.08
-!      IY-1                 O----O 3                                33.08
-!                                |                                  33.08
-!                                |                                  33.08
-!      IY-2                      O 7                                33.08
-!                                |                                  33.08
-!                                |                                  33.08
-!      IY-3                      O 9                                33.08
+!    THIS IS THE STENCIL USED WITH THE S&L SCHEME:                        33.08
+!                                                                         33.08
+!      IY+1                      o 4                                      33.08
+!                                |                                        33.08
+!                 8    6    2    | 1   5                                  33.08
+!      IY         O----O----O----*----O                                   33.08
+!                                |                                        33.08
+!                           10   |                                        33.08
+!      IY-1                 O----O 3                                      33.08
+!                                |                                        33.08
+!                                |                                        33.08
+!      IY-2                      O 7                                      33.08
+!                                |                                        33.08
+!                                |                                        33.08
+!      IY-3                      O 9                                      33.08
 !
 !                 ^    ^    ^    ^    ^
-!                 |    |    |    |    |                             33.08
+!                 |    |    |    |    |                                   33.08
 !               IX-3 IX-2 IX-1  IX  IX+1
 !
-!     1: IX  , IY                                                   33.10
-!     2: IX-1, IY                                                   33.10
-!     3: IX  , IY-1                                                 33.10
-!     4: IX  , IY+1                                                 33.10
-!     5: IX+1, IY                                                   33.10
-!     6: IX-2, IY                                                   33.10
-!     7: IX  , IY-2                                                 33.10
-!     8: IX-3, IY                                                   33.10
-!     9: IX  , IY-3                                                 33.10
-!    10: IX-1, IY-1                                                 33.10
+!     1: IX  , IY                                                         33.10
+!     2: IX-1, IY                                                         33.10
+!     3: IX  , IY-1                                                       33.10
+!     4: IX  , IY+1                                                       33.10
+!     5: IX+1, IY                                                         33.10
+!     6: IX-2, IY                                                         33.10
+!     7: IX  , IY-2                                                       33.10
+!     8: IX-3, IY                                                         33.10
+!     9: IX  , IY-3                                                       33.10
+!    10: IX-1, IY-1                                                       33.10
 !
-!    THIS IS THE STENCIL USED WITH THE SORDUP SCHEME:               33.10
-!                                                                   33.10
-!                      4    2                                       33.10
-!      IY              O----O----* 1                                33.10
-!                                |                                  33.10
-!                                |                                  33.10
-!      IY-1                      O 3                                33.10
-!                                |                                  33.10
-!                                |                                  33.10
-!      IY-2                      O 5                                33.10
-!                                                                   33.10
-!                      ^    ^    ^                                  33.10
-!                      |    |    |                                  33.10
-!                    IX-2 IX-1  IX                                  33.10
-!     1: IX  , IY                                                   33.10
-!     2: IX-1, IY                                                   33.10
-!     3: IX  , IY-1                                                 33.10
-!     4: IX-2, IY                                                   33.10
-!     5: IX  , IY-2                                                 33.10
+!    THIS IS THE STENCIL USED WITH THE *OLD* SORDUP SCHEME:               40.59
+!                                                                         33.10
+!                      4    2                                             33.10
+!      IY              O----O----* 1                                      33.10
+!                                |                                        33.10
+!                                |                                        33.10
+!      IY-1                      O 3                                      33.10
+!                                |                                        33.10
+!                                |                                        33.10
+!      IY-2                      O 5                                      33.10
+!                                                                         33.10
+!                      ^    ^    ^                                        33.10
+!                      |    |    |                                        33.10
+!                    IX-2 IX-1  IX                                        33.10
+!     1: IX  , IY                                                         33.10
+!     2: IX-1, IY                                                         33.10
+!     3: IX  , IY-1                                                       33.10
+!     4: IX-2, IY                                                         33.10
+!     5: IX  , IY-2                                                       33.10
+!
+!    THIS IS THE STENCIL USED WITH THE *NEW* SORDUP SCHEME:               40.59
+!    (NUMBERING HAS CHANGED)                                              40.59
+!                                                                         40.59
+!                                O 4(7)                                   40.59
+!                                |                                        40.59
+!                                |                                        40.59
+!                  6(4)   2(2)   | 1(1) 5(6)                              40.59
+!      IY          O------O------*------O                                 40.59
+!                                |                                        40.59
+!                                |                                        40.59
+!                                |                                        40.59
+!      IY-1                      O 3(3)                                   40.59
+!                                |                                        40.59
+!                                |                                        40.59
+!                                |                                        40.59
+!      IY-2                      O 7(5)                                   40.59
+!                                                                         40.59
+!                      ^    ^    ^                                        40.59
+!                      |    |    |                                        40.59
+!                    IX-2 IX-1  IX                                        40.59
+!     1: IX  , IY                                                         40.59
+!     2: IX-1, IY                                                         40.59
+!     3: IX  , IY-1                                                       40.59
+!     4: IX  , IY+1        7==>4                                          40.59
+!     5: IX+1, IY          6==>5                                          40.59
+!     6: IX-2, IY          4==>6                                          40.59
+!     7: IX  , IY-2        5==>7                                          40.59
+!                                                                         40.59
+!  AND THE BSBT SCHEME:                                                   40.59
+!                                                                         40.59
+!                          O 4                                            40.59
+!                          |                                              40.59
+!                   2      | 1     5                                      40.59
+!                   O------*------O                                       40.59
+!                          |                                              40.59
+!                          |                                              40.59
+!                        3 O                                              40.59
+!     1: IX  , IY                                                         40.59
+!     2: IX-1, IY                                                         40.59
+!     3: IX  , IY-1                                                       40.59
+!     4: IX  , IY+1                                                       40.59
+!     5: IX+1, IY                                                         40.59
 !
 !  4. Argument variables
 !
@@ -2515,37 +2563,45 @@
         IYCGRD(2) = IY                                                    40.00
         IXCGRD(3) = IX                                                    40.00
         IYCGRD(3) = IY+KSY                                                40.00
+        IXCGRD(4) = IX                                                    40.59
+        IYCGRD(4) = IY-KSY                                                40.59
+        IXCGRD(5) = IX-KSX                                                40.59
+        IYCGRD(5) = IY                                                    40.59
         PROPSL = PROPSC                                                   33.09
         IF (PROPSC.EQ.1) THEN                                             33.09
-          ICMAX = 3
-        ELSE IF (PROPSC.EQ.2) THEN          ! SORDUP scheme               33.10
-!         add more points for higher order scheme                         33.10
-          ICMAX = 5                                                       33.10
-          IXCGRD(4) = IX+2*KSX                                            33.10
-          IYCGRD(4) = IY                                                  33.10
-          IXCGRD(5) = IX                                                  33.10
-          IYCGRD(5) = IY+2*KSY                                            33.10
-        ELSE IF (PROPSC.EQ.3) THEN          ! S&L scheme                  33.09
-!         add more points for higher order schemes here
+          ICMAX = 5                                                       40.59
+        ELSE
+!         add more points for higher order schemes                        33.10
+          ICMAX = 7                                                       40.59 33.10
+          IXCGRD(6) = IX+2*KSX                                            40.59 33.10
+          IYCGRD(6) = IY                                                  40.59 33.10
+          IXCGRD(7) = IX                                                  40.59 33.10
+          IYCGRD(7) = IY+2*KSY                                            40.59 33.10
+        ENDIF
+        IF (PROPSC.EQ.3) THEN
+!         add more points for S&L scheme
           ICMAX = 10                                                      33.09
-          IXCGRD(4) = IX                                                  33.09
-          IYCGRD(4) = IY-KSY                                              33.09
-          IXCGRD(5) = IX-KSX                                              33.09
-          IYCGRD(5) = IY                                                  33.09
-          IXCGRD(6) = IX+2*KSX                                            33.09
-          IYCGRD(6) = IY                                                  33.09
-          IXCGRD(7) = IX                                                  33.09
-          IYCGRD(7) = IY+2*KSY                                            33.09
-          IXCGRD(8) = IX+3*KSX                                            33.09
-          IYCGRD(8) = IY                                                  33.09
-          IXCGRD(9) = IX                                                  33.09
-          IYCGRD(9) = IY+3*KSY                                            33.09
+          IXCGRD(8)  = IX+3*KSX                                           33.09
+          IYCGRD(8)  = IY                                                 33.09
+          IXCGRD(9)  = IX                                                 33.09
+          IYCGRD(9)  = IY+3*KSY                                           33.09
           IXCGRD(10) = IX+KSX                                             33.09
           IYCGRD(10) = IY+KSY                                             33.09
         ENDIF
         DO IC = 2, ICMAX                                                  40.00
 !         if one of the points of a stencil is outside the computational  33.09
 !         domain, fall back to first order scheme                         33.09
+
+! Note that stencil of first order scheme has been increased to 5           40.59
+! Also note that points 4 and 5 are used only for SPROSD.                   40.59
+! In cases where user has chosen the first order scheme (PROPSC=1) , and    40.59
+! points 4 and/or 5 fall outside the grid, we do not want to set PROPSL=0.  40.59
+! However, we do want to set INSIDE=FALSE, so that KCGRD(IC) = 1, so that   40.59
+! SPROSD will know that the point is not available. As the code is written  40.59
+! now, no change is required. But also be aware that refraction will no     40.59
+! longer be calculated at the last grid point (i.e. SPROSD is not coded to  40.59
+! fall back to the first order scheme, it just set C_theta=0).              40.59
+
           INSIDE = .TRUE.                                                 33.09
           IF (IXCGRD(IC).LT.1) THEN                                       33.09
             IF (KREPTX.GT.0) THEN                                         33.09
@@ -2599,7 +2655,7 @@
         IF (PROPSL.EQ.0) THEN                                             33.09
           ICMAX = 1                                                       33.09
         ELSEIF (PROPSL.EQ.1) THEN                                         33.09
-          ICMAX = 3                                                       33.09
+          ICMAX = 5                                                       40.59 33.09
         ENDIF                                                             33.09
       ELSE
         PROPSL = 0                                                        40.13
@@ -2668,18 +2724,18 @@
             ELSE IF (SWPDIR .EQ. 2) THEN                                  33.10
                LINK(1)  = CROSS(1,KCGRD(2))                               33.10
                LINK(2)  = CROSS(2,KCGRD(1))                               33.10
-               LINK(3)  = CROSS(1,KCGRD(4))                               33.10
+               LINK(3)  = CROSS(1,KCGRD(6))                               40.59 33.10
                LINK(4)  = CROSS(2,KCGRD(3))                               33.10
             ELSE IF (SWPDIR .EQ. 3) THEN                                  33.10
                LINK(1)  = CROSS(1,KCGRD(2))                               33.10
                LINK(2)  = CROSS(2,KCGRD(3))                               33.10
-               LINK(3)  = CROSS(1,KCGRD(4))                               33.10
-               LINK(4)  = CROSS(2,KCGRD(5))                               33.10
+               LINK(3)  = CROSS(1,KCGRD(6))                               40.59 33.10
+               LINK(4)  = CROSS(2,KCGRD(7))                               40.59 33.10
             ELSE IF (SWPDIR .EQ. 4) THEN                                  33.10
                LINK(1)  = CROSS(1,KCGRD(1))                               33.10
                LINK(2)  = CROSS(2,KCGRD(3))                               33.10
                LINK(3)  = CROSS(1,KCGRD(2))                               33.10
-               LINK(4)  = CROSS(2,KCGRD(5))                               33.10
+               LINK(4)  = CROSS(2,KCGRD(7))                               40.59 33.10
             ENDIF                                                         33.10
          ENDIF                                                            33.10
          IF (PROPSL.GT.1) THEN                                            33.10
@@ -2834,26 +2890,9 @@
 !TIMG      CALL SWTSTO(112)                                                    40.23
 
 !     *** compute the propagation velocities CAS and CAD   ***
-!     *** for the central gridpoint only and only for the  ***
-!     *** directional domain : IDCMIN-1 until IDCMAX+1     ***
 
 !TIMG      CALL SWTSTA(113)                                                    40.23
-      IF ( IMUD.NE.1 .AND. INT(PNUMS(32)).NE.1 ) THEN
         CALL SPROSD (SPCSIG         ,KWAVE          ,CAS            ,     40.03
-     &               CAD            ,CGO            ,                     30.80
-     &               COMPDA(1,JDP2) ,COMPDA(1,JDP1) ,SPCDIR(1,2)    ,
-     &               SPCDIR(1,3)    ,COMPDA(1,JVX2) ,COMPDA(1,JVY2) ,
-     &               SWPDIR         ,IDCMIN         ,IDCMAX         ,
-     &               SPCDIR(1,4)    ,SPCDIR(1,6)    ,SPCDIR(1,5)    ,     30.80
-     &               RDX            ,RDY            ,                     30.80
-     &               CAX            ,CAY            ,LSWMAT(1,1,JABIN),   40.02
-     &               KGRPNT         ,XCGRID         ,YCGRID         ,     40.03
-     &               IDDLOW         ,IDDTOP                               40.61
-     &                                                            )
-      ELSE
-!       this routine used @C/@x rather than @h/@x and will be called
-!       if either command MUD or command NUM ... DIR WNUM is applied
-        CALL SPROSDM(SPCSIG         ,KWAVE          ,CAS            ,     40.03
      &               CAD            ,CGO            ,                     30.80
      &               COMPDA(1,JDP2) ,COMPDA(1,JDP1) ,SPCDIR(1,2)    ,
      &               SPCDIR(1,3)    ,COMPDA(1,JVX2) ,COMPDA(1,JVY2) ,
@@ -2863,7 +2902,6 @@
      &               XCGRID         ,YCGRID         ,                     40.03
      &               IDDLOW         ,IDDTOP                               40.61
      &                                                            )
-      ENDIF
 !TIMG      CALL SWTSTO(113)                                                    40.23
 
 !TIMG      CALL SWTSTA(114)                                                    40.23
@@ -3387,10 +3425,10 @@
         ICMX = 10                                                         40.41
       ELSEIF (PROPSC.EQ.2) THEN                                           40.41
         WRITE(PRINTF,8511) 'SORDUP'                                       40.41
-        ICMX = 5                                                          40.41
+        ICMX = 7                                                          40.59 40.41
       ELSE                                                                40.41
         WRITE(PRINTF,8511) 'BSBT  '                                       40.41
-        ICMX = 3                                                          40.41
+        ICMX = 5                                                          40.59 40.41
       ENDIF                                                               40.41
  8511 FORMAT(' Scheme for geographic propagation is ',A6)                 40.41
       IF (OPTG.NE.5) WRITE(PRINTF,8512) PROPSC, ICMX                      40.80 40.41
