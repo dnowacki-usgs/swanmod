@@ -548,7 +548,7 @@
       SUBROUTINE SVEG ( DEP2   ,IMATDA   ,ETOT   ,SMEBRK    ,
      &                  KMESPC ,PLVEGT   ,
      &                  IDCMIN ,IDCMAX   ,ISSTOP ,DISSC1    ,
-     &                  NPLA2  )
+     &                  NPLA2  ,KWAVE    )
 !
 !****************************************************************
 !
@@ -682,7 +682,8 @@
      &        IMATDA(MDC,MSC)      ,
      &        DISSC1(MDC,MSC,MDISP),
      &        PLVEGT(MDC,MSC,NPTST),
-     &        NPLA2 (MCGRD)
+     &        NPLA2 (MCGRD)        ,
+     &        KWAVE(MSC,ICMAX)    
       REAL    ETOT, SMEBRK, KMESPC
 !
 !  6. Local variables
@@ -751,13 +752,20 @@
       DATA IENT/0/
       IF (LTRACE) CALL STRACE (IENT,'SVEG')
 
+      ! Determine which variable CD method to use.            
+      open(unit=62,file='fort.62',status='old')
+      read(62,*) djnx
+      close(62)
+      
 !     --- compute layer-independent vegetation dissipation factor
-
-      KD    = KMESPC * DEP2(KCGRD(1))
+      DO IS = 1, ISSTOP
+    !      KD    = KMESPC * DEP2(KCGRD(1))
+      KD = KWAVE(IS,1) * DEP2(KCGRD(1))
       IF ( KD.GT.10. ) RETURN
-      C     = 3.*KMESPC*(COSH(KD))**3
-      SVEG1 = SQRT(2./PI) * GRAV**2 * (KMESPC/SMEBRK)**3 * SQRT(ETOT)/ C
+      C     = 3. * KWAVE(IS,1) *(COSH(KD))**3
+      SVEG1=SQRT(2./PI)*GRAV**2*(KWAVE(IS,1)/SPCSIG(IS))**3*SQRT(ETOT)/C
       IF ( VARNPL ) SVEG1 = SVEG1 * NPLA2(KCGRD(1))
+      
 
 !     --- compute dissipation factor for each layer and summed up
 
@@ -765,7 +773,7 @@
       DO IL = 1, ILMAX
          SLAYH = SLAYH + LAYH(IL)
       ENDDO
-
+      
       KVEGH = 0.
       C     = 0.
       D     = 0.
@@ -774,7 +782,7 @@
       IF ( DEP2(KCGRD(1)).GT.SLAYH ) THEN
 
          DO IL = 1, ILMAX
-            KVEGH = KVEGH + KMESPC * LAYH(IL)
+            KVEGH = KVEGH + KWAVE(IS,1) * LAYH(IL)
             SINHK = SINH(KVEGH)
             A     = C
             B     = D
@@ -785,16 +793,13 @@
             alp   = LAYH(1)/DEP2(KCGRD(1))
 !           LAYH = "layer thickness for vegetation model"
 !           DEP2 = "depth"
-            Keu   = (SQRT(2*ETOT)*SMEBRK*COSH(KD*alp)/SINH(KD))
-     +             *(2*pi/SMEBRK)/VEGDIL(IL)
+            Keu   = (SQRT(2*ETOT)*SPCSIG(IS)*COSH(KD*alp)/SINH(KD))
+     +             *(2*pi/SPCSIG(IS))/VEGDIL(IL)
 !           Compute Reynolds number
-            Rey = (SQRT(2*ETOT)*SMEBRK*COSH(KD*alp)/SINH(KD))
+            Rey = (SQRT(2*ETOT)*SPCSIG(IS)*COSH(KD*alp)/SINH(KD))
      +            *VEGDIL(IL)/1E-6
 !           Re = u_c * b / nu
-! Determine which variable CD method to use.            
-            open(unit=62,file='fort.62',status='old')
-            read(62,*) djnx
-            close(62)
+
 !            IVEG, KCGRD(1), DEP2(KCGRD(1)), SVEGET
 !           Keu = u_c * T_p / b_v
 !           u_c = "characteristic velocity acting on the plant and defined as the maximum 
@@ -846,7 +851,7 @@
                END DO
                LAYPRT = DEP2(KCGRD(1)) - SLAYH2
                DO IK = 1, IL-1
-                  KVEGH = KVEGH + KMESPC * LAYH(IK)
+                  KVEGH = KVEGH + KWAVE(IS,1) * LAYH(IK)
                   SINHK = SINH(KVEGH)
                   A     = C
                   B     = D
@@ -856,7 +861,7 @@
                   B     = D - B
                   SVEG2 = SVEG2+VEGDRL(IK)*VEGDIL(IK)*VEGNSL(IK)*(A + B)
                END DO
-               KVEGH = KVEGH + KMESPC * LAYPRT
+               KVEGH = KVEGH + KWAVE(IS,1) * LAYPRT
                SINHK = SINH(KVEGH)
                A     = C
                B     = D
@@ -868,8 +873,9 @@
                EXIT VGLOOP
             END IF
          END DO VGLOOP
-
+      
       END IF
+      
 
 !     --- compute total dissipation
 
@@ -882,7 +888,7 @@
  110     FORMAT (' SVEG :IVEG INDX DEP VEGFAC:', 2I5, 2E12.4)
       END IF
 
-      DO IS = 1, ISSTOP
+      !DO IS = 1, ISSTOP
          DO IDDUM = IDCMIN(IS), IDCMAX(IS)
             ID = MOD ( IDDUM - 1 + MDC , MDC ) + 1
 
@@ -894,8 +900,8 @@
             DISSC1(ID,IS,5) = DISSC1(ID,IS,5) + SVEGET
 
          END DO
-      END DO
-
+      !END DO
+      ENDDO
       RETURN
       END
 !
