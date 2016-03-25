@@ -6452,6 +6452,7 @@
          CALL SVEG (DEP2   ,IMATDA   ,ETOT   ,SMEBRK    ,                 40.58 40.55
      &              KMESPC ,PLVEGT   ,                                    40.58 40.55
      &              IDCMIN ,IDCMAX   ,ISSTOP ,DISSC1    ,                 40.55
+     &              ABRBOT    ,                                           !AB          
      &              NPLA2  ,KWAVE    )                                    40.67 40.61 40.55
       END IF                                                              40.55
 !TIMG      CALL SWTSTO(139)                                                    40.55
