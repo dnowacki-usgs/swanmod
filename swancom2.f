@@ -548,6 +548,7 @@
       SUBROUTINE SVEG ( DEP2   ,IMATDA   ,ETOT   ,SMEBRK    ,
      &                  KMESPC ,PLVEGT   ,
      &                  IDCMIN ,IDCMAX   ,ISSTOP ,DISSC1    ,
+     &                  ABRBOT    ,     
      &                  NPLA2  ,KWAVE    )
 !
 !****************************************************************
@@ -684,7 +685,7 @@
      &        PLVEGT(MDC,MSC,NPTST),
      &        NPLA2 (MCGRD)        ,
      &        KWAVE(MSC,ICMAX)    
-      REAL    ETOT, SMEBRK, KMESPC
+      REAL    ETOT, SMEBRK, KMESPC, ABRBOT
 !
 !  6. Local variables
 !
@@ -713,7 +714,9 @@
       INTEGER ID, IDDUM, IENT, IK, IL, IS
       REAL    A, B, C, D, KD, KVEGH, LAYPRT, SINHK, SLAYH,
      &        SLAYH1, SLAYH2, SVEG1, SVEG2, SVEGET, alp, Keu, Q, 
-     &        Rey, djnx, kctype, KDmean
+     &        Rey, djnx, kctype, KDmean,
+     &        inpe, inpt, inprhov, inprhow, sma, gravity,
+     &        orbvel, Cauchy, lbywe, cff ! , waveexc 
 !    Added alp, Keu, Q following Tomohiro -- DJN
 !
 !  9. Subroutines calling
@@ -782,8 +785,27 @@
 
       IF ( DEP2(KCGRD(1)).GT.SLAYH ) THEN
 
-         DO IL = 1, ILMAX
+         DO IL = 1, ILMAX ! AB: I think we should propose the various drag options outside of this loop and only work with one layer of vegetation
+            alp   = LAYH(1)/DEP2(KCGRD(1))
+!           LAYH = "layer thickness for vegetation model"
+!           DEP2 = "depth"            
+            if (djnx.eq.5) then ! AB: Effective blade length from Luhar and Nepf 2016
+            ! AB: all the following inp_ variables should go in one external input file
+            inpe=1.0d9 ! elastic modulus
+            inpt=0.3d-3 ! blade thickness
+            sma=VEGDIL(1)*inpt**(3./12.) ! second moment of area
+            inprhov=700. ! vegetation tissue density (in kg/m3)
+            inprhow=1025. ! density of water must be already defined somewhere else (in SWANMAIN.F?)
+            gravity=9.81 ! must also be already defined somewhere else
+            orbvel=(SQRT(2*ETOT)*SPCSIG(IS)*COSH(KD*alp)/SINH(KD))
+            Cauchy=inprhow*VEGDIL(1)*(orbvel**2)*(LAYH(1)**3)/inpe/sma ! Cauchy number
+!            waveexc=SQRT(8.*ETOT)/KD ! near-bottom excursion amplitude (ABRBOT calculated in SWANCOM1.F)
+            lbywe=LAYH(1)/ABRBOT
+            cff=0.7*(Cauchy*lbywe)**(-0.21)
+            KVEGH = KVEGH + KWAVE(IS,1) * LAYH(IL) * cff           
+            else
             KVEGH = KVEGH + KWAVE(IS,1) * LAYH(IL)
+            end            
             SINHK = SINH(KVEGH)
             A     = C
             B     = D
@@ -791,10 +813,7 @@
             D     = 3.*SINHK
             A     = C - A
             B     = D - B
-            alp   = LAYH(1)/DEP2(KCGRD(1))
-!           LAYH = "layer thickness for vegetation model"
-!           DEP2 = "depth"
-            kctype = 2
+            kctype = 2 ! AB: you might want this switch to be an input from an external file
             if (kctype.eq.1) then
             Keu   = (SQRT(2*ETOT)*SPCSIG(IS)*COSH(KD*alp)/SINH(KD))
      +             *(2*pi/SPCSIG(IS))/VEGDIL(IL)
@@ -820,10 +839,10 @@
 !           
 !           SMEBRK = "Mean frequency according to first order moment"
 !           VEGDIL = "vegetation diameter for each layer and grid point"
-            Q     = Keu/alp**0.76
 
             if (djnx.eq.1) then
 ! Suzuki et al 2012 (actually Mendez and Losada 2004)- almost identical to B&H2009 below
+                Q     = Keu/alp**0.76
                 VEGDRL(1)=exp(-0.0138*Q)/(Q**0.3) 
             else if (djnx.eq.2) then
 ! Try the Bradley and Houser 2009 value - does not do a great job - not enough dissip.
@@ -834,6 +853,12 @@
             else if (djnx.eq.4) then 
 ! Try the Houser et al 2014 combined formulation--this one has way too much drag.
                 VEGDRL(1) = 0.01 + (700/Rey)**2
+            else if (djnx.eq.5) then 
+! Try the Graham 1980--to be used with effective blade length of Luhar and Nepf 2016 (relatively large drag).
+                VEGDRL(1) = MAX(10.*Keu**(-1./3.),1.)
+            else
+! Default drag
+                VEGDRL(1) = 1.          
             endif            
             ! output debugging variables to fort.60
             ! write(60,*) VEGDRL(1), KCGRD(1)
