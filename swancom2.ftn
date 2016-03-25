@@ -713,7 +713,7 @@
       INTEGER ID, IDDUM, IENT, IK, IL, IS
       REAL    A, B, C, D, KD, KVEGH, LAYPRT, SINHK, SLAYH,
      &        SLAYH1, SLAYH2, SVEG1, SVEG2, SVEGET, alp, Keu, Q, 
-     &        Rey, djnx
+     &        Rey, djnx, kctype, KDmean
 !    Added alp, Keu, Q following Tomohiro -- DJN
 !
 !  9. Subroutines calling
@@ -758,8 +758,9 @@
       close(62)
       
 !     --- compute layer-independent vegetation dissipation factor
+      KDmean    = KMESPC * DEP2(KCGRD(1))
       DO IS = 1, ISSTOP
-    !      KD    = KMESPC * DEP2(KCGRD(1))
+           
       KD = KWAVE(IS,1) * DEP2(KCGRD(1))
       IF ( KD.GT.10. ) RETURN
       C     = 3. * KWAVE(IS,1) *(COSH(KD))**3
@@ -793,11 +794,20 @@
             alp   = LAYH(1)/DEP2(KCGRD(1))
 !           LAYH = "layer thickness for vegetation model"
 !           DEP2 = "depth"
+            kctype = 2
+            if (kctype.eq.1) then
             Keu   = (SQRT(2*ETOT)*SPCSIG(IS)*COSH(KD*alp)/SINH(KD))
      +             *(2*pi/SPCSIG(IS))/VEGDIL(IL)
 !           Compute Reynolds number
             Rey = (SQRT(2*ETOT)*SPCSIG(IS)*COSH(KD*alp)/SINH(KD))
      +            *VEGDIL(IL)/1E-6
+            else
+            Keu   = (SQRT(2*ETOT)*SMEBRK*COSH(KDmean*alp)/SINH(KDmean))
+     +             *(2*pi/SMEBRK)/VEGDIL(IL)
+!           Compute Reynolds number
+            Rey = (SQRT(2*ETOT)*SMEBRK*COSH(KDmean*alp)/SINH(KDmean))
+     +            *VEGDIL(IL)/1E-6            
+            endif
 !           Re = u_c * b / nu
 
 !            IVEG, KCGRD(1), DEP2(KCGRD(1)), SVEGET
@@ -826,8 +836,8 @@
                 VEGDRL(1) = 0.01 + (700/Rey)**2
             endif            
             ! output debugging variables to fort.60
-            write(60,*) VEGDRL(1), KCGRD(1)
-            write(61,*) Keu, Rey
+            ! write(60,*) VEGDRL(1), KCGRD(1)
+            ! write(61,*) Keu, Rey
             SVEG2 = SVEG2 + VEGDRL(IL)*VEGDIL(IL)*VEGNSL(IL)*(A + B)
          END DO
 
