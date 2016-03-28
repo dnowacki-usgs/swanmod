@@ -805,7 +805,7 @@
             KVEGH = KVEGH + KWAVE(IS,1) * LAYH(IL) * cff           
             else
             KVEGH = KVEGH + KWAVE(IS,1) * LAYH(IL)
-            end            
+            endif          
             SINHK = SINH(KVEGH)
             A     = C
             B     = D
