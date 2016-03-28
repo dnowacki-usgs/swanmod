@@ -806,8 +806,8 @@
 !            waveexc=SQRT(8.*ETOT)/KD ! near-bottom excursion amplitude (ABRBOT calculated in SWANCOM1.F)
             lbywe=LAYH(1)/ABRBOT
             cff=0.7*(Cauchy*lbywe)**(-0.21)
-            KVEGH = KVEGH + KWAVE(IS,1) * LAYH(IL) * cff          
-            write(67, *) KCGRD(1), Etot, Cauchy, orbvel
+            cff=MIN(cff,1.0) ! to avoid NaN when Cauchy is zero            
+            KVEGH = KVEGH + KWAVE(IS,1) * LAYH(IL) * cff           
             else
             KVEGH = KVEGH + KWAVE(IS,1) * LAYH(IL)
             endif          
