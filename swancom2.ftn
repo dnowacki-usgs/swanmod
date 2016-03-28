@@ -715,7 +715,7 @@
       REAL    A, B, C, D, KD, KVEGH, LAYPRT, SINHK, SLAYH,
      &        SLAYH1, SLAYH2, SVEG1, SVEG2, SVEGET, alp, Keu, Q, 
      &        Rey, djnx, kctype, KDmean,
-     &        inpe, inpt, inprhov, inprhow, sma, gravity,
+     &        inpe, inpt, inprhov, sma,
      &        orbvel, Cauchy, lbywe, cff ! , waveexc 
 !    Added alp, Keu, Q following Tomohiro -- DJN
 !
@@ -760,6 +760,10 @@
       read(62,*) djnx
       close(62)
       
+      open(unit=66,file='kctype',status='old')
+      read(66,*) kctype
+      close(66)
+      
 !     --- compute layer-independent vegetation dissipation factor
       KDmean    = KMESPC * DEP2(KCGRD(1))
       DO IS = 1, ISSTOP
@@ -795,14 +799,15 @@
             inpt=0.3d-3 ! blade thickness
             sma=VEGDIL(1)*inpt**(3./12.) ! second moment of area
             inprhov=700. ! vegetation tissue density (in kg/m3)
-            inprhow=1025. ! density of water must be already defined somewhere else (in SWANMAIN.F?)
-            gravity=9.81 ! must also be already defined somewhere else
+            !inprhow=1025. ! density of water must be already defined somewhere else (in SWANMAIN.F?)
             orbvel=(SQRT(2*ETOT)*SPCSIG(IS)*COSH(KD*alp)/SINH(KD))
-            Cauchy=inprhow*VEGDIL(1)*(orbvel**2)*(LAYH(1)**3)/inpe/sma ! Cauchy number
+            ! Cauchy=inprhow*VEGDIL(1)*(orbvel**2)*(LAYH(1)**3)/inpe/sma ! Cauchy number
+            Cauchy=RHO*VEGDIL(1)*(orbvel**2)*(LAYH(1)**3)/inpe/sma ! Cauchy number
 !            waveexc=SQRT(8.*ETOT)/KD ! near-bottom excursion amplitude (ABRBOT calculated in SWANCOM1.F)
             lbywe=LAYH(1)/ABRBOT
             cff=0.7*(Cauchy*lbywe)**(-0.21)
-            KVEGH = KVEGH + KWAVE(IS,1) * LAYH(IL) * cff           
+            KVEGH = KVEGH + KWAVE(IS,1) * LAYH(IL) * cff          
+            write(67, *) KCGRD(1), Etot, Cauchy, orbvel
             else
             KVEGH = KVEGH + KWAVE(IS,1) * LAYH(IL)
             endif          
@@ -813,7 +818,7 @@
             D     = 3.*SINHK
             A     = C - A
             B     = D - B
-            kctype = 2 ! AB: you might want this switch to be an input from an external file
+            ! kctype = 1 ! AB: you might want this switch to be an input from an external file
             if (kctype.eq.1) then
             Keu   = (SQRT(2*ETOT)*SPCSIG(IS)*COSH(KD*alp)/SINH(KD))
      +             *(2*pi/SPCSIG(IS))/VEGDIL(IL)
